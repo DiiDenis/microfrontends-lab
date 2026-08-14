@@ -1,0 +1,28 @@
+.shell {
+  min-height: 100vh;
+}
+
+.header {
+  align-items: center;
+  border-bottom: 1px solid #cbd5e1;
+  display: flex;
+  gap: 2rem;
+  padding: 1rem 1.5rem;
+}
+
+.owner {
+  font-weight: 700;
+}
+
+.navigation {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.content {
+  padding: 1.5rem;
+}
+
