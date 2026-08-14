@@ -1,0 +1,10 @@
+{
+  "name": "microfrontends-lab",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=24.18.0 <25"
+  }
+}
+
