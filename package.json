@@ -4,12 +4,19 @@
   "private": true,
   "packageManager": "pnpm@11.21.0",
   "scripts": {
+    "dev": "pnpm --parallel --filter ./apps/* run dev",
+    "build": "pnpm --filter ./apps/* run build",
+    "typecheck": "pnpm --filter ./apps/* run typecheck",
+    "check": "pnpm run typecheck && pnpm run build",
     "dev:shell": "pnpm --filter @mfe-lab/shell-react dev",
     "dev:products": "pnpm --filter @mfe-lab/products-react dev",
+    "dev:account": "pnpm --filter @mfe-lab/account-vue dev",
     "build:shell": "pnpm --filter @mfe-lab/shell-react build",
     "build:products": "pnpm --filter @mfe-lab/products-react build",
+    "build:account": "pnpm --filter @mfe-lab/account-vue build",
     "typecheck:shell": "pnpm --filter @mfe-lab/shell-react typecheck",
-    "typecheck:products": "pnpm --filter @mfe-lab/products-react typecheck"
+    "typecheck:products": "pnpm --filter @mfe-lab/products-react typecheck",
+    "typecheck:account": "pnpm --filter @mfe-lab/account-vue typecheck"
   },
   "engines": {
     "node": ">=24.18.0 <25"

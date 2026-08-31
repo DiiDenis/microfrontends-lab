@@ -22,3 +22,12 @@ O campo `packageManager` do `package.json` fixa a versão do pnpm usada pelo lab
 | TypeScript | 7.0.2 |
 | Tipos do React | 19.2.18 |
 | Tipos do React DOM | 19.2.4 |
+
+## Dependências da etapa 04
+
+| Dependência | Versão |
+| --- | --- |
+| Vue | 3.5.42 |
+| Plugin Vue do Rsbuild | 2.0.1 |
+| TypeScript do Account Vue | 6.0.3 |
+| Vue TSC | 3.3.11 |

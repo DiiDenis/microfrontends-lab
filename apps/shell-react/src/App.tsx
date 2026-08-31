@@ -12,11 +12,21 @@ function HomePage() {
 }
 
 function ProductsPlaceholder() {
-  return <h1>Products ainda não conectado</h1>;
+  return (
+    <section>
+      <h1>Products ainda não conectado</h1>
+      <p>Este placeholder não incorpora o app independente da porta 3001.</p>
+    </section>
+  );
 }
 
 function AccountPlaceholder() {
-  return <h1>Account ainda não conectado</h1>;
+  return (
+    <section>
+      <h1>Account ainda não conectado</h1>
+      <p>Este placeholder não incorpora o app independente da porta 3002.</p>
+    </section>
+  );
 }
 
 export function App() {
@@ -50,4 +60,3 @@ export function App() {
     </div>
   );
 }
-
