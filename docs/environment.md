@@ -31,3 +31,9 @@ O campo `packageManager` do `package.json` fixa a versão do pnpm usada pelo lab
 | Plugin Vue do Rsbuild | 2.0.1 |
 | TypeScript do Account Vue | 6.0.3 |
 | Vue TSC | 3.3.11 |
+
+## Dependência da etapa 06
+
+| Dependência | Versão |
+| --- | --- |
+| Plugin Module Federation para Rsbuild | 2.9.0 |

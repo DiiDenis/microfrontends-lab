@@ -26,3 +26,14 @@ pnpm run check
 ```
 
 `pnpm run dev` inicia os três apps em paralelo. Os demais comandos executam as tarefas correspondentes em todos os apps existentes.
+
+## Primeiro producer
+
+| Item | Valor |
+| --- | --- |
+| App standalone | `http://localhost:3001/` |
+| Manifest federado | `http://localhost:3001/mf-manifest.json` |
+| Nome do container | `products` |
+| Módulo exposto | `./ProductApp` |
+
+Products continua abrindo como SPA independente e também produz os artefatos que permitirão a um consumer carregar `products/ProductApp` em runtime.

@@ -7,3 +7,4 @@
 | 03 | Criar o remote React de produtos ainda independente | Concluída |
 | 04 | Criar o app Vue de conta ainda independente | Concluída |
 | 05 | Orquestrar os três apps sem federá-los | Concluída |
+| 06 | Transformar Products em producer do Module Federation | Concluída |
