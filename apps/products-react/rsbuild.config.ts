@@ -29,6 +29,9 @@ export default defineConfig({
       },
     }),
   ],
+  output: {
+    assetPrefix: 'http://localhost:3001/',
+  },
   server: {
     port: 3001,
   },

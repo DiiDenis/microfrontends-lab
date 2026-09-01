@@ -18,7 +18,7 @@ export function ProductApp() {
     <main className={styles.app}>
       <span className={styles.owner}>PRODUCTS · REACT · STANDALONE</span>
       <h1>Produtos</h1>
-      <p>Remote version: products-v1</p>
+      <p>Remote version: products-v2</p>
       <p>Itens adicionados: {addedItems}</p>
 
       <ul className={styles.productList}>

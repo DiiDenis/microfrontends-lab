@@ -97,7 +97,15 @@ Essa explicação deve aparecer no e-book depois que `producer`, `consumer`, `ex
 - O manifest é um catálogo: descreve o container, módulos expostos, remote entry, chunks, CSS e dependências compartilhadas.
 - O manifest não contém HTML pronto nem é o componente.
 - `remoteEntry.js` é a entrada executável do container; os chunks contêm a implementação compilada.
+- O `remoteEntry.js` pertence ao producer que oferece os módulos. No laboratório, ele é gerado pelo build de Products em `apps/products-react/dist/remoteEntry.js` e depois servido para o shell.
+- Ele não é escrito manualmente, não fica no `src` e não é o próprio `ProductApp`. Sua função é inicializar o container, participar da negociação do share scope, localizar os módulos expostos e entregar a implementação solicitada ao consumer.
+- Em uma arquitetura com Products, Account e Checkout como producers, cada remote normalmente gera e publica seu próprio `remoteEntry.js`.
+- O shell consulta o manifest de cada producer, encontra seu remote entry e solicita o expose necessário. O shell pode também gerar artefatos federados por usar o plugin, mas só oferece módulos a terceiros quando declara `exposes`.
 - O shell aponta para um manifest de endereço estável e não precisa conhecer nomes de chunks com hash, que podem mudar a cada build.
+
+Frase curta para preservar:
+
+> `remoteEntry.js` é a porta de entrada executável do projeto que compartilha módulos; ele pertence ao producer e permite que o consumer solicite os exposes desse container.
 
 Analogia a preservar:
 
@@ -168,6 +176,42 @@ Analogia a preservar:
 - Entender a montagem desde o zero permite diagnosticar problemas sem depender apenas de copiar configuração.
 - O objetivo do laboratório não é decorar todas as opções, mas formar um modelo mental que possa ser aplicado à arquitetura específica de uma empresa.
 
+### 13. Deploy independente não é HMR
+
+- HMR pertence ao servidor de desenvolvimento e troca módulos enquanto o desenvolvedor trabalha, sem representar um deploy.
+- No preview de produção, uma mudança só aparece depois de um novo build do app alterado.
+- O shell pode permanecer com exatamente os mesmos arquivos enquanto Products publica um novo manifest e novos chunks na mesma origem.
+- Manter estável a URL do manifest permite que o runtime descubra nomes de assets com hashes diferentes em cada versão.
+- O `assetPrefix` do producer informa a origem pública de `remoteEntry.js` e dos chunks; sem ele, um manifest de produção pode apontar assets para a origem errada.
+- Cache do manifest ou do remote entry pode atrasar a atualização mesmo quando o deploy foi concluído.
+- Deploy independente não significa independência absoluta: nome do expose, exports, props, versões compartilhadas e comportamento ainda formam contratos entre equipes.
+
+Frase curta para preservar:
+
+> O shell não precisa ser reconstruído para cada mudança interna compatível do remote; ele precisa continuar conseguindo localizar o manifest e consumir o mesmo contrato público.
+
+### 14. Artefatos de build, hashes e publicação
+
+- Cada app gera seu próprio diretório `dist`; esse diretório é o produto do build e normalmente não é versionado no Git.
+- O hash curto no nome de um chunk é um identificador de conteúdo criado pelo bundler para cache busting; não deve ser confundido com o SHA-256 completo calculado por `Get-FileHash`.
+- O Module Federation não exige uma hierarquia universal de pastas no servidor. Exige que as URLs publicadas no manifest continuem válidas.
+- Em produção, shell e remotes podem estar em domínios, buckets, serviços ou prefixos de pasta diferentes.
+- A URL do manifest tende a permanecer estável, enquanto chunks com hash podem ser imutáveis e mudar de nome a cada conteúdo novo.
+- `assetPrefix` é a base pública que o producer anuncia para localizar `remoteEntry.js`, chunks e CSS; não é o diretório local `dist`.
+- A URL configurada em `remotes` responde “onde o shell encontra o manifest”; o `assetPrefix` responde “onde o remote diz que seus próprios assets estão”.
+- Uma publicação segura envia primeiro os novos chunks e somente depois atualiza o manifest. Assets antigos devem permanecer disponíveis por algum tempo para páginas que ainda carregaram o manifest anterior.
+- Mudar somente a implementação interna e preservar o contrato permite alterar os hashes do remote sem mudar os arquivos do shell.
+
+### 15. Composição por rota e montagem em elemento HTML
+
+- Rota e elemento de montagem não são alternativas excludentes. A rota pode decidir quando ativar um micro frontend e, dentro dela, o shell pode oferecer uma `<div>` como alvo de montagem.
+- Products é React dentro de um shell React, então `ProductApp` entra diretamente na árvore React já existente; o remote não chama outro `createRoot`.
+- Account será Vue dentro do host React. O shell não deve tratar um componente Vue como componente React; ele renderiza um elemento contêiner e entrega esse `HTMLElement` ao contrato remoto.
+- O remote Vue implementa uma fronteira explícita de lifecycle: cria a aplicação com `createApp`, executa `mount(element)` e oferece `unmount()` para limpeza quando a rota sair.
+- O shell é dono da posição e do elemento contêiner; o remote é dono do conteúdo renderizado dentro desse elemento.
+- O mesmo contrato de montagem poderia ser usado fora de uma rota, por exemplo em um dashboard com vários widgets simultâneos. A rota é apenas uma forma de decidir quando montar.
+- Um Web Component representa outra fronteira: ele pode aparecer como uma tag no template de React ou Vue, embora sua distribuição como pacote continue sendo diferente de um remote carregado por Module Federation.
+
 ## Glossário inicial do e-book
 
 - **Shell/host:** aplicação que controla a experiência principal e compõe partes externas.
@@ -195,8 +239,10 @@ Analogia a preservar:
 - `docs/lessons/05-three-independent-apps.md`
 - `docs/lessons/06-products-producer.md`
 - `docs/lessons/07-shell-consumes-products.md`
+- `docs/lessons/08-independent-remote-deploy.md`
 - `docs/diagrams/05-before-federation.md`
 - `docs/diagrams/07-products-runtime-flow.md`
+- `docs/experiments/01-remote-independent-update.md`
 
 ## Orientação para continuar registrando
 

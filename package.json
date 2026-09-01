@@ -14,6 +14,8 @@
     "build:shell": "pnpm --filter @mfe-lab/shell-react build",
     "build:products": "pnpm --filter @mfe-lab/products-react build",
     "build:account": "pnpm --filter @mfe-lab/account-vue build",
+    "preview:shell": "pnpm --filter @mfe-lab/shell-react preview",
+    "preview:products": "pnpm --filter @mfe-lab/products-react preview",
     "typecheck:shell": "pnpm --filter @mfe-lab/shell-react typecheck",
     "typecheck:products": "pnpm --filter @mfe-lab/products-react typecheck",
     "typecheck:account": "pnpm --filter @mfe-lab/account-vue typecheck"

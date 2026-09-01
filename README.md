@@ -27,6 +27,17 @@ pnpm run check
 
 `pnpm run dev` inicia os três apps em paralelo. Os demais comandos executam as tarefas correspondentes em todos os apps existentes.
 
+Para servir os builds de produção usados no experimento de deploy independente:
+
+```powershell
+pnpm run build:products
+pnpm run build:shell
+pnpm run preview:products
+pnpm run preview:shell
+```
+
+Os dois previews devem ficar em terminais separados. Products usa a porta 3001 e o shell usa a porta 3000.
+
 ## Primeiro producer
 
 | Item | Valor |

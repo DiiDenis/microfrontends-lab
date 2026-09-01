@@ -9,3 +9,4 @@
 | 05 | Orquestrar os três apps sem federá-los | Concluída |
 | 06 | Transformar Products em producer do Module Federation | Concluída |
 | 07 | Fazer o shell consumir Products em runtime | Concluída |
+| 08 | Provar deploy independente do remote | Concluída |
