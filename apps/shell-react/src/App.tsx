@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
 import { RemoteRouteErrorBoundary } from './RemoteRouteErrorBoundary';
+import { VueRemoteRoute } from './VueRemoteRoute';
 import styles from './App.module.css';
 
 const ProductsRemoteModule = lazy(() => import('./ProductsRemoteModule'));
@@ -22,15 +23,6 @@ function ProductsRemoteRoute() {
         <ProductsRemoteModule />
       </Suspense>
     </RemoteRouteErrorBoundary>
-  );
-}
-
-function AccountPlaceholder() {
-  return (
-    <section>
-      <h1>Account ainda não conectado</h1>
-      <p>Este placeholder não incorpora o app independente da porta 3002.</p>
-    </section>
   );
 }
 
@@ -59,7 +51,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductsRemoteRoute />} />
-          <Route path="/account" element={<AccountPlaceholder />} />
+          <Route path="/account" element={<VueRemoteRoute />} />
         </Routes>
       </main>
     </div>

@@ -228,6 +228,21 @@ Frase curta para preservar:
 
 > O host oferece o terreno, um `HTMLElement`; o remote Vue constrói dentro dele e devolve a chave de desmontagem. O host não precisa saber como o Vue cria ou destrói sua interface.
 
+### 17. Adapter React para um remote Vue
+
+- O adapter `VueRemoteRoute` é um componente React, mas sua função não é converter Vue em React. Ele traduz o lifecycle da rota React para o contrato imperativo do remote.
+- `useRef` guarda o container real que React criou. Vue recebe esse elemento somente depois que ele existe no DOM.
+- `useEffect` inicia o import assíncrono e devolve o cleanup. Ao sair da rota, React executa esse cleanup e o handle remoto chama `app.unmount()`.
+- React controla o elemento contêiner; Vue controla somente os filhos internos. O adapter não renderiza conteúdo React dentro da área entregue ao Vue.
+- Um sinal `cancelled` resolve a corrida em que o usuário sai da rota antes de `import('account/mount')` terminar. Nesse caso, o resultado atrasado é ignorado e Vue não monta em uma tela que já deixou de existir.
+- Loading e erro pertencem ao adapter React. A falha fica restrita a `/account`.
+- O runtime pode manter em memória a falha de carregamento do manifest. Por isso, o retry simples desta etapa recarrega a URL atual: a nova página cria outra instância do runtime e tenta Account novamente. Retentativas sem reload exigiriam controlar o cache pela API ou pelo plugin oficial de retry.
+- Em desenvolvimento, `StrictMode` pode executar setup, cleanup e setup do efeito para revelar problemas de lifecycle. Um adapter correto precisa tolerar essa sequência sem deixar duas aplicações montadas.
+
+Frase curta para preservar:
+
+> React não renderiza Vue: React decide quando existe um container, e o adapter traduz essa existência em `mount` e `unmount`.
+
 ## Glossário inicial do e-book
 
 - **Shell/host:** aplicação que controla a experiência principal e compõe partes externas.
@@ -258,8 +273,10 @@ Frase curta para preservar:
 - `docs/lessons/07-shell-consumes-products.md`
 - `docs/lessons/08-independent-remote-deploy.md`
 - `docs/lessons/09-vue-lifecycle-remote.md`
+- `docs/lessons/10-react-consumes-vue.md`
 - `docs/diagrams/05-before-federation.md`
 - `docs/diagrams/07-products-runtime-flow.md`
+- `docs/diagrams/10-react-host-vue-lifecycle.md`
 - `docs/experiments/01-remote-independent-update.md`
 
 ## Orientação para continuar registrando

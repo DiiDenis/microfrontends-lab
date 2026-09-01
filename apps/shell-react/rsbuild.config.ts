@@ -3,8 +3,10 @@ import { defineConfig, loadEnv } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
 const localProductsRemoteUrl = 'http://localhost:3001/mf-manifest.json';
-const { parsed: environment } = loadEnv({ prefixes: ['PRODUCTS_'] });
+const localAccountRemoteUrl = 'http://localhost:3002/mf-manifest.json';
+const { parsed: environment } = loadEnv({ prefixes: ['PRODUCTS_', 'ACCOUNT_'] });
 const productsRemoteUrl = environment.PRODUCTS_REMOTE_URL ?? localProductsRemoteUrl;
+const accountRemoteUrl = environment.ACCOUNT_REMOTE_URL ?? localAccountRemoteUrl;
 
 export default defineConfig({
   plugins: [
@@ -13,6 +15,7 @@ export default defineConfig({
       name: 'shell',
       remotes: {
         products: `products@${productsRemoteUrl}`,
+        account: `account@${accountRemoteUrl}`,
       },
       shareStrategy: 'loaded-first',
       shared: {
