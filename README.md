@@ -10,11 +10,11 @@ A estrutura será preenchida gradualmente nas próximas etapas.
 
 | App | Framework | Porta | Responsabilidade | Status de integração |
 | --- | --- | --- | --- | --- |
-| `shell-react` | React 19 | 3000 | Layout, navegação e rotas globais | Standalone; contém placeholders locais |
-| `products-react` | React 19 | 3001 | Catálogo e estado local de produtos | Standalone; não conectado ao shell |
+| `shell-react` | React 19 | 3000 | Layout, navegação e rotas globais | Consumer de `products/ProductApp` |
+| `products-react` | React 19 | 3001 | Catálogo e estado local de produtos | Standalone e producer consumido pelo shell |
 | `account-vue` | Vue 3 | 3002 | Conta e papel local do usuário | Standalone; não conectado ao shell |
 
-Os três apps possuem servidores e builds próprios, mas ainda não existe composição entre eles.
+Os três apps possuem servidores e builds próprios. Products agora também é composto em runtime na rota `/products` do shell; Account continua representado por um placeholder local.
 
 ## Comandos gerais
 
@@ -37,3 +37,7 @@ pnpm run check
 | Módulo exposto | `./ProductApp` |
 
 Products continua abrindo como SPA independente e também produz os artefatos que permitirão a um consumer carregar `products/ProductApp` em runtime.
+
+## Primeiro consumer
+
+O shell registra `products` pelo manifest `http://localhost:3001/mf-manifest.json` e carrega `products/ProductApp` somente ao acessar `/products`. Para apontar um build a outro ambiente, defina `PRODUCTS_REMOTE_URL`; sem essa variável, o fallback local permanece explícito.

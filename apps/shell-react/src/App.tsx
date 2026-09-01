@@ -1,6 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
+import { RemoteRouteErrorBoundary } from './RemoteRouteErrorBoundary';
 import styles from './App.module.css';
+
+const ProductsRemoteModule = lazy(() => import('./ProductsRemoteModule'));
 
 function HomePage() {
   return (
@@ -11,12 +15,13 @@ function HomePage() {
   );
 }
 
-function ProductsPlaceholder() {
+function ProductsRemoteRoute() {
   return (
-    <section>
-      <h1>Products ainda não conectado</h1>
-      <p>Este placeholder não incorpora o app independente da porta 3001.</p>
-    </section>
+    <RemoteRouteErrorBoundary>
+      <Suspense fallback={<p role="status">Carregando Products...</p>}>
+        <ProductsRemoteModule />
+      </Suspense>
+    </RemoteRouteErrorBoundary>
   );
 }
 
@@ -53,7 +58,7 @@ export function App() {
       <main className={styles.content}>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductsPlaceholder />} />
+          <Route path="/products" element={<ProductsRemoteRoute />} />
           <Route path="/account" element={<AccountPlaceholder />} />
         </Routes>
       </main>

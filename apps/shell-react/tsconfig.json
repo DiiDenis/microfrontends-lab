@@ -1,8 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "products/*": ["./@mf-types/products/*"]
+    }
   },
   "include": ["src", "rsbuild.config.ts"]
 }
-

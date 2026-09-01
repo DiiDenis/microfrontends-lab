@@ -1,5 +1,6 @@
 node_modules/
 dist/
+@mf-types/
 coverage/
 playwright-report/
 test-results/
@@ -11,4 +12,3 @@ test-results/
 Thumbs.db
 .idea/
 .vscode/
-

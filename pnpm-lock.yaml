@@ -67,6 +67,9 @@ importers:
         specifier: 7.18.2
         version: 7.18.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
     devDependencies:
+      '@module-federation/rsbuild-plugin':
+        specifier: 2.9.0
+        version: 2.9.0(@rsbuild/core@2.1.13(@module-federation/runtime-tools@2.9.0))(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))
       '@rsbuild/core':
         specifier: 2.1.13
         version: 2.1.13(@module-federation/runtime-tools@2.9.0)
