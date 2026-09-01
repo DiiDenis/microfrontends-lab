@@ -1,6 +1,7 @@
 node_modules/
 dist/
 @mf-types/
+.mf/
 coverage/
 playwright-report/
 test-results/

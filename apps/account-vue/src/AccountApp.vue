@@ -3,7 +3,12 @@ import { ref } from 'vue';
 
 type AccountRole = 'Administrador' | 'Operador';
 
-const name = 'Denis';
+const props = defineProps<{
+  initialUserName: string;
+  source: string;
+}>();
+
+const name = props.initialUserName;
 const role = ref<AccountRole>('Administrador');
 
 function toggleRole() {
@@ -15,6 +20,8 @@ function toggleRole() {
   <main class="account">
     <span class="owner">ACCOUNT · VUE · STANDALONE</span>
     <h1>Minha conta</h1>
+    <p>Remote version: account-v1</p>
+    <p>Origem: {{ source }}</p>
 
     <dl class="details">
       <div>
@@ -58,4 +65,3 @@ function toggleRole() {
   margin: 0.25rem 0 0;
 }
 </style>
-

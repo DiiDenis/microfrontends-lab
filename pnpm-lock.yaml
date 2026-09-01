@@ -14,6 +14,9 @@ importers:
         specifier: 3.5.42
         version: 3.5.42(typescript@6.0.3)
     devDependencies:
+      '@module-federation/rsbuild-plugin':
+        specifier: 2.9.0
+        version: 2.9.0(@rsbuild/core@2.1.13(@module-federation/runtime-tools@2.9.0))(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
       '@rsbuild/core':
         specifier: 2.1.13
         version: 2.1.13(@module-federation/runtime-tools@2.9.0)
@@ -811,6 +814,18 @@ snapshots:
     dependencies:
       '@module-federation/sdk': 2.9.0
 
+  '@module-federation/cli@2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))':
+    dependencies:
+      '@module-federation/dts-plugin': 2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/sdk': 2.9.0
+      commander: 11.1.0
+      jiti: 2.4.2
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - vue-tsc
+
   '@module-federation/cli@2.9.0(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))':
     dependencies:
       '@module-federation/dts-plugin': 2.9.0(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))
@@ -822,6 +837,23 @@ snapshots:
       - typescript
       - utf-8-validate
       - vue-tsc
+
+  '@module-federation/dts-plugin@2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))':
+    dependencies:
+      '@module-federation/error-codes': 2.9.0
+      '@module-federation/managers': 2.9.0
+      '@module-federation/sdk': 2.9.0
+      '@module-federation/third-party-dts-extractor': 2.9.0
+      adm-zip: 0.6.0
+      isomorphic-ws: 5.0.0(ws@8.21.0)
+      typescript: 6.0.3
+      undici: 7.29.0
+      ws: 8.21.0
+    optionalDependencies:
+      vue-tsc: 3.3.11(typescript@6.0.3)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@module-federation/dts-plugin@2.9.0(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))':
     dependencies:
@@ -837,6 +869,29 @@ snapshots:
     optionalDependencies:
       vue-tsc: 3.3.11(typescript@7.0.2)
     transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@module-federation/enhanced@2.9.0(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))':
+    dependencies:
+      '@module-federation/bridge-react-webpack-plugin': 2.9.0
+      '@module-federation/cli': 2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/dts-plugin': 2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/error-codes': 2.9.0
+      '@module-federation/inject-external-runtime-core-plugin': 2.9.0(@module-federation/runtime-tools@2.9.0)
+      '@module-federation/managers': 2.9.0
+      '@module-federation/manifest': 2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/rspack': 2.9.0(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/runtime-tools': 2.9.0
+      '@module-federation/sdk': 2.9.0
+      '@module-federation/webpack-bundler-runtime': 2.9.0
+      schema-utils: 4.3.0
+      tapable: 2.3.0
+    optionalDependencies:
+      typescript: 6.0.3
+      vue-tsc: 3.3.11(typescript@6.0.3)
+    transitivePeerDependencies:
+      - '@rspack/core'
       - bufferutil
       - utf-8-validate
 
@@ -873,12 +928,38 @@ snapshots:
     dependencies:
       '@module-federation/sdk': 2.9.0
 
+  '@module-federation/manifest@2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))':
+    dependencies:
+      '@module-federation/dts-plugin': 2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/managers': 2.9.0
+      '@module-federation/sdk': 2.9.0
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - vue-tsc
+
   '@module-federation/manifest@2.9.0(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))':
     dependencies:
       '@module-federation/dts-plugin': 2.9.0(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))
       '@module-federation/managers': 2.9.0
       '@module-federation/sdk': 2.9.0
     transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - vue-tsc
+
+  '@module-federation/node@2.7.50(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))':
+    dependencies:
+      '@module-federation/enhanced': 2.9.0(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/runtime': 2.9.0
+      '@module-federation/sdk': 2.9.0
+      encoding: 0.1.13
+      node-fetch: 2.7.0(encoding@0.1.13)
+      tapable: 2.3.0
+    transitivePeerDependencies:
+      - '@rspack/core'
       - bufferutil
       - typescript
       - utf-8-validate
@@ -899,6 +980,21 @@ snapshots:
       - utf-8-validate
       - vue-tsc
 
+  '@module-federation/rsbuild-plugin@2.9.0(@rsbuild/core@2.1.13(@module-federation/runtime-tools@2.9.0))(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))':
+    dependencies:
+      '@module-federation/enhanced': 2.9.0(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/node': 2.7.50(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/sdk': 2.9.0
+    optionalDependencies:
+      '@rsbuild/core': 2.1.13(@module-federation/runtime-tools@2.9.0)
+    transitivePeerDependencies:
+      - '@rspack/core'
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - vue-tsc
+      - webpack
+
   '@module-federation/rsbuild-plugin@2.9.0(@rsbuild/core@2.1.13(@module-federation/runtime-tools@2.9.0))(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))':
     dependencies:
       '@module-federation/enhanced': 2.9.0(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))
@@ -913,6 +1009,23 @@ snapshots:
       - utf-8-validate
       - vue-tsc
       - webpack
+
+  '@module-federation/rspack@2.9.0(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))':
+    dependencies:
+      '@module-federation/bridge-react-webpack-plugin': 2.9.0
+      '@module-federation/dts-plugin': 2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/inject-external-runtime-core-plugin': 2.9.0(@module-federation/runtime-tools@2.9.0)
+      '@module-federation/managers': 2.9.0
+      '@module-federation/manifest': 2.9.0(typescript@6.0.3)(vue-tsc@3.3.11(typescript@6.0.3))
+      '@module-federation/runtime-tools': 2.9.0
+      '@module-federation/sdk': 2.9.0
+      '@rspack/core': 2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23)
+    optionalDependencies:
+      typescript: 6.0.3
+      vue-tsc: 3.3.11(typescript@6.0.3)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@module-federation/rspack@2.9.0(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(typescript@7.0.2)(vue-tsc@3.3.11(typescript@7.0.2))':
     dependencies:

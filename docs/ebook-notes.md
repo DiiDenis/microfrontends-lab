@@ -212,6 +212,22 @@ Frase curta para preservar:
 - O mesmo contrato de montagem poderia ser usado fora de uma rota, por exemplo em um dashboard com vários widgets simultâneos. A rota é apenas uma forma de decidir quando montar.
 - Um Web Component representa outra fronteira: ele pode aparecer como uma tag no template de React ou Vue, embora sua distribuição como pacote continue sendo diferente de um remote carregado por Module Federation.
 
+### 16. Lifecycle neutro para atravessar frameworks
+
+- Um Single File Component Vue não pode ser renderizado por React como se fosse um componente React: cada framework possui seu próprio formato de árvore virtual, runtime e lifecycle.
+- O remote Account publica `account/mount`, e não o arquivo `.vue`. Sua superfície pública recebe um `HTMLElement` e dados simples e devolve um handle com `unmount()`.
+- O elemento HTML é uma fronteira neutra: qualquer host capaz de fornecer DOM pode chamar o contrato sem precisar conhecer `createApp` nem importar Vue.
+- `mount` cria a aplicação Vue, entrega ao Vue o conteúdo interno do container e registra aquela montagem. Uma segunda montagem no mesmo elemento falha cedo em vez de criar duas aplicações sobrepostas.
+- `unmount` encerra a aplicação Vue, remove os efeitos e listeners gerenciados por ela e libera o container no registro. A operação é idempotente no mesmo handle.
+- O bootstrap standalone não cria um caminho paralelo: ele encontra `#root` e chama exatamente o mesmo `mount` que um consumer usará no futuro.
+- O `WeakMap` evita reter o container artificialmente, mas sua proteção contra duplicidade pertence à instância carregada desse módulo; não é um registro global entre bundles duplicados.
+- O contrato atual só contempla opções iniciais. Atualização de props, eventos entre apps, prontidão assíncrona e tratamento padronizado de erros exigiriam evolução explícita do contrato.
+- Compartilhar Vue como singleton negocia uma instância compatível quando houver participantes Vue. O shell React não passa a importar Vue por causa disso, e o remote ainda precisa carregar Vue quando funciona standalone.
+
+Frase curta para preservar:
+
+> O host oferece o terreno, um `HTMLElement`; o remote Vue constrói dentro dele e devolve a chave de desmontagem. O host não precisa saber como o Vue cria ou destrói sua interface.
+
 ## Glossário inicial do e-book
 
 - **Shell/host:** aplicação que controla a experiência principal e compõe partes externas.
@@ -227,6 +243,7 @@ Frase curta para preservar:
 - **Singleton:** solicitação para reutilizar uma única instância compatível.
 - **Bootstrap:** ponto que monta a aplicação standalone em um elemento HTML.
 - **Contrato de montagem:** função ou API que separa a interface do local onde será montada.
+- **Lifecycle:** operações explícitas que iniciam e encerram a presença de um micro frontend, como `mount` e `unmount`.
 - **Error Boundary:** limite React que impede uma falha interna de derrubar uma área maior.
 - **DTS:** declarações TypeScript que descrevem o contrato de um módulo.
 
@@ -240,6 +257,7 @@ Frase curta para preservar:
 - `docs/lessons/06-products-producer.md`
 - `docs/lessons/07-shell-consumes-products.md`
 - `docs/lessons/08-independent-remote-deploy.md`
+- `docs/lessons/09-vue-lifecycle-remote.md`
 - `docs/diagrams/05-before-federation.md`
 - `docs/diagrams/07-products-runtime-flow.md`
 - `docs/experiments/01-remote-independent-update.md`

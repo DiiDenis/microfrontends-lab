@@ -12,7 +12,7 @@ A estrutura será preenchida gradualmente nas próximas etapas.
 | --- | --- | --- | --- | --- |
 | `shell-react` | React 19 | 3000 | Layout, navegação e rotas globais | Consumer de `products/ProductApp` |
 | `products-react` | React 19 | 3001 | Catálogo e estado local de produtos | Standalone e producer consumido pelo shell |
-| `account-vue` | Vue 3 | 3002 | Conta e papel local do usuário | Standalone; não conectado ao shell |
+| `account-vue` | Vue 3 | 3002 | Conta e papel local do usuário | Standalone e producer; ainda não conectado ao shell |
 
 Os três apps possuem servidores e builds próprios. Products agora também é composto em runtime na rota `/products` do shell; Account continua representado por um placeholder local.
 
@@ -48,6 +48,17 @@ Os dois previews devem ficar em terminais separados. Products usa a porta 3001 e
 | Módulo exposto | `./ProductApp` |
 
 Products continua abrindo como SPA independente e também produz os artefatos que permitirão a um consumer carregar `products/ProductApp` em runtime.
+
+## Producer Vue com lifecycle
+
+| Item | Valor |
+| --- | --- |
+| App standalone | `http://localhost:3002/` |
+| Manifest federado | `http://localhost:3002/mf-manifest.json` |
+| Nome do container | `account` |
+| Módulo exposto | `./mount` |
+
+Account continua abrindo como SPA independente e agora publica um contrato neutro de `mount`/`unmount`. O shell ainda não o consome nesta etapa.
 
 ## Primeiro consumer
 

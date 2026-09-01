@@ -10,3 +10,4 @@
 | 06 | Transformar Products em producer do Module Federation | Concluída |
 | 07 | Fazer o shell consumir Products em runtime | Concluída |
 | 08 | Provar deploy independente do remote | Concluída |
+| 09 | Expor o lifecycle do Vue como remote | Concluída |
