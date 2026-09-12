@@ -13,3 +13,4 @@
 | 09 | Expor o lifecycle do Vue como remote | Concluída |
 | 10 | Montar o Vue dentro do host React | Concluída |
 | 11 | Criar pacote de contratos em build time | Concluída |
+| 12 | Comunicar os micro frontends com Custom Events | Concluída |

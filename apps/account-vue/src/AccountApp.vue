@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import type { AccountRole } from '@mfe-lab/contracts';
-import { ref } from 'vue';
+import {
+  LAB_EVENT_NAMES,
+  type AccountRole,
+  type ProfileUpdatedEventPayload,
+} from '@mfe-lab/contracts';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
   initialUserName: string;
@@ -9,6 +13,21 @@ const props = defineProps<{
 
 const name = props.initialUserName;
 const role = ref<AccountRole>('Administrador');
+
+watch(
+  role,
+  (currentRole) => {
+    window.dispatchEvent(
+      new CustomEvent<ProfileUpdatedEventPayload>(
+        LAB_EVENT_NAMES.profileUpdated,
+        {
+          detail: { name, role: currentRole },
+        },
+      ),
+    );
+  },
+  { immediate: true },
+);
 
 function toggleRole() {
   role.value = role.value === 'Administrador' ? 'Operador' : 'Administrador';

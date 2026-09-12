@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import {
+  LAB_EVENT_NAMES,
+  type CartUpdatedEventPayload,
+} from '@mfe-lab/contracts';
+import { useEffect, useState } from 'react';
 
 import styles from './ProductApp.module.css';
 
@@ -9,6 +13,14 @@ const products = [
 
 export function ProductApp() {
   const [addedItems, setAddedItems] = useState(0);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent<CartUpdatedEventPayload>(LAB_EVENT_NAMES.cartUpdated, {
+        detail: { totalItems: addedItems },
+      }),
+    );
+  }, [addedItems]);
 
   function addItem() {
     setAddedItems((currentTotal) => currentTotal + 1);

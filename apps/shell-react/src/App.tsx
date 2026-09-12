@@ -1,4 +1,9 @@
-import { lazy, Suspense } from 'react';
+import {
+  LAB_EVENT_NAMES,
+  type CartUpdatedEventPayload,
+  type ProfileUpdatedEventPayload,
+} from '@mfe-lab/contracts';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
 import { RemoteRouteErrorBoundary } from './RemoteRouteErrorBoundary';
@@ -27,6 +32,37 @@ function ProductsRemoteRoute() {
 }
 
 export function App() {
+  const [cartTotal, setCartTotal] = useState(0);
+  const [profile, setProfile] = useState<ProfileUpdatedEventPayload | null>(
+    null,
+  );
+
+  useEffect(() => {
+    function handleCartUpdated(event: CustomEvent<CartUpdatedEventPayload>) {
+      setCartTotal(event.detail.totalItems);
+    }
+
+    function handleProfileUpdated(
+      event: CustomEvent<ProfileUpdatedEventPayload>,
+    ) {
+      setProfile(event.detail);
+    }
+
+    window.addEventListener(LAB_EVENT_NAMES.cartUpdated, handleCartUpdated);
+    window.addEventListener(
+      LAB_EVENT_NAMES.profileUpdated,
+      handleProfileUpdated,
+    );
+
+    return () => {
+      window.removeEventListener(LAB_EVENT_NAMES.cartUpdated, handleCartUpdated);
+      window.removeEventListener(
+        LAB_EVENT_NAMES.profileUpdated,
+        handleProfileUpdated,
+      );
+    };
+  }, []);
+
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
@@ -45,6 +81,15 @@ export function App() {
             </li>
           </ul>
         </nav>
+
+        <div className={styles.status} aria-live="polite">
+          <span>Carrinho: {cartTotal}</span>
+          <span>
+            {profile
+              ? `Usuário: ${profile.name} · ${profile.role}`
+              : 'Usuário: aguardando Account'}
+          </span>
+        </div>
       </header>
 
       <main className={styles.content}>

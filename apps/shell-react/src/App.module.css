@@ -22,7 +22,12 @@
   padding: 0;
 }
 
+.status {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+}
+
 .content {
   padding: 1.5rem;
 }
-

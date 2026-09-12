@@ -477,6 +477,7 @@ Frase curta para preservar:
 - `docs/lessons/09-vue-lifecycle-remote.md`
 - `docs/lessons/10-react-consumes-vue.md`
 - `docs/lessons/11-build-time-contract-package.md`
+- `docs/lessons/12-cross-mfe-events.md`
 - `docs/diagrams/05-before-federation.md`
 - `docs/diagrams/07-products-runtime-flow.md`
 - `docs/diagrams/10-react-host-vue-lifecycle.md`
@@ -485,3 +486,202 @@ Frase curta para preservar:
 ## Orientação para continuar registrando
 
 A cada nova etapa, acrescentar aqui somente os conceitos e dúvidas que melhorarem a futura narrativa. A implementação completa permanece na lição numerada. No encerramento do laboratório, transformar este caderno e as lições em capítulos progressivos, revisar exemplos contra o código final e gerar o e-book em um formato solicitado pelo aluno.
+## 19. Comunicação em runtime: os apps conversam sem dividir o estado
+
+Pense novamente nos três projetos:
+
+```text
+shell-react       → mostra informações gerais no header
+products-react    → é dono do contador do carrinho
+account-vue       → é dono do nome e do papel
+```
+
+O shell não entra no Products para buscar seu `useState` e não entra no Vue para ler seu `ref`. Cada remote anuncia um fato usando um evento do navegador:
+
+```text
+Products: “o carrinho agora tem 2 itens” ──► cart-updated
+Account:  “Denis agora é Operador”       ──► profile-updated
+Shell:    escuta e atualiza somente o header
+```
+
+O pacote `@mfe-lab/contracts` funciona como o modelo do envelope: define o nome da mensagem e quais campos ela carrega. `CustomEvent` é o entregador em runtime. O estado continua dentro do MFE que o controla.
+
+Frase para memorizar:
+
+> O contrato diz como a mensagem deve ser; o Custom Event transporta a mensagem; o micro frontend de origem continua dono do dado.
+
+### Receita pequena
+
+No emissor React:
+
+```typescript
+window.dispatchEvent(
+  new CustomEvent<CartUpdatedEventPayload>(LAB_EVENT_NAMES.cartUpdated, {
+    detail: { totalItems },
+  }),
+);
+```
+
+No emissor Vue, a ideia é a mesma: mudou o `ref`, cria o `CustomEvent` e despacha no `window`.
+
+No shell:
+
+```typescript
+useEffect(() => {
+  function handleCartUpdated(event: CustomEvent<CartUpdatedEventPayload>) {
+    setCartTotal(event.detail.totalItems);
+  }
+
+  window.addEventListener(LAB_EVENT_NAMES.cartUpdated, handleCartUpdated);
+
+  return () => {
+    window.removeEventListener(LAB_EVENT_NAMES.cartUpdated, handleCartUpdated);
+  };
+}, []);
+```
+
+O `return` continua sendo o segredo do cleanup: quando o componente que registrou o listener desmonta, React remove a inscrição. Sem isso, eventos podem ser tratados repetidamente após remontagens.
+
+Custom Events são adequados para poucas notificações desacopladas na mesma página. URL é melhor para estado navegável; backend é melhor para dados duráveis e de negócio; props/callbacks são melhores quando há uma relação direta de montagem; um store compartilhado aumenta o acoplamento e só deve ser adotado com ownership claro.
+
+### `window` é global em qual espaço?
+
+Explicar com cuidado que `window` não é global entre todos os projetos, servidores ou usuários. Ele é o objeto global de uma página aberta no navegador.
+
+Quando o shell carrega Products por Module Federation e monta Account dentro de um container, os três códigos executam no mesmo documento e enxergam o mesmo `window`:
+
+```text
+Página localhost:3000
+│
+├── Shell React
+├── Products React carregado como remote
+└── Account Vue montado em uma div
+        │
+        └── todos usam o mesmo window
+```
+
+Ao abrir Products sozinho em `localhost:3001`, surge outra página com outro `window`. Um evento disparado nessa aba não chega automaticamente ao shell aberto em `localhost:3000`.
+
+```text
+Aba localhost:3000 → window A
+Aba localhost:3001 → window B
+
+evento no window B ≠ evento recebido no window A
+```
+
+Essa distinção evita a falsa impressão de que Custom Events atravessam deploys, processos, abas ou rede.
+
+### `dispatchEvent` em linguagem humana
+
+`dispatch` pode ser lido como “disparar”, “enviar” ou “publicar agora”. Ele não executa outra aplicação diretamente. O navegador procura os listeners registrados para aquele nome e chama seus handlers.
+
+```text
+dispatchEvent = tocar a campainha
+listener      = quem está ouvindo a campainha
+handler       = o que a pessoa faz quando escuta
+detail        = o conteúdo entregue com o aviso
+```
+
+Fluxo completo do carrinho:
+
+```text
+1. A pessoa clica em Adicionar
+2. Products altera seu useState de 0 para 1
+3. Products dispara cart-updated { totalItems: 1 }
+4. window localiza os listeners de cart-updated
+5. o navegador chama handleCartUpdated(event)
+6. o shell lê event.detail.totalItems
+7. setCartTotal(1) agenda uma nova renderização
+8. o header passa a mostrar Carrinho: 1
+```
+
+### Não é um Event Bus do Vue
+
+Registrar a reação do aluno: mesmo um desenvolvedor experiente pode nunca ter visto `window` usado dessa forma, porque frameworks normalmente conduzem a props, Context, stores e APIs próprias. A API nativa já aparece em eventos como `resize`, `scroll`, `storage` e `keydown`; a novidade didática é criar um nome de evento com `CustomEvent` e transportar dados em `detail`.
+
+No Vue 2 era comum criar um Event Bus baseado em uma instância Vue e usar `$emit` e `$on`. Aqui o Vue apenas percebe a alteração de seu `ref` e chama uma API do navegador. React, Vue, Angular, Svelte ou JavaScript puro podem entender o mesmo evento.
+
+Conceitualmente, usar `window` dessa maneira tem publicação e assinatura, portanto lembra um Event Bus pequeno. Tecnicamente, não criamos uma classe, singleton próprio ou biblioteca com `publish` e `subscribe`: usamos `dispatchEvent`, `addEventListener` e `removeEventListener` diretamente.
+
+Limitações que precisam aparecer no e-book:
+
+- funciona apenas no mesmo documento;
+- não persiste nem guarda histórico;
+- não entrega novamente para quem começou a ouvir depois;
+- os listeners são executados de forma síncrona durante o dispatch;
+- excesso de eventos cria uma “rádio global” difícil de rastrear;
+- nomes, payloads, ownership e cleanup precisam ser explícitos;
+- TypeScript não valida sozinho o payload em runtime.
+
+### Como ler a função `App` do shell
+
+Separar visualmente as três responsabilidades introduzidas na etapa 12:
+
+```text
+useState
+└── guarda a última fotografia recebida para apresentar no header
+
+useEffect com []
+├── registra os listeners uma vez quando App monta
+└── devolve o cleanup executado quando App desmonta
+
+JSX
+└── lê cartTotal e profile e redesenha o header
+```
+
+Ressaltar que trocar `/products` por `/account` não desmonta normalmente o `App` do shell. Somente o conteúdo escolhido pelo router muda. Por isso os listeners do shell continuam ativos durante a navegação. O cleanup do `App` acontece quando o próprio shell desmonta, enquanto o cleanup de `VueRemoteRoute` acontece ao sair da rota Account.
+
+Products continua sendo a fonte da verdade do contador, e Account continua sendo a fonte da verdade do perfil. `cartTotal` e `profile` no shell são projeções para leitura, sem comandos para alterar o estado dos remotes.
+
+### Decidir que será MFE não significa usar `window` em tudo
+
+Para um projeto novo, ensinar esta ordem de perguntas:
+
+```text
+1. Qual é o domínio de negócio?
+2. Qual equipe é responsável por ele?
+3. Existe necessidade real de deploy independente?
+4. Ele funcionará standalone, dentro de um shell ou nos dois modos?
+5. Qual superfície pública será exposta?
+6. Quais dados entram no MFE?
+7. Quais acontecimentos saem dele?
+8. Qual canal é adequado para cada comunicação?
+```
+
+Micro frontend não deve ser escolhido apenas para separar pastas. A autonomia de equipe, ownership de domínio e necessidade de entrega independente precisam compensar custos como contratos, observabilidade, versionamento, resiliência e coordenação visual.
+
+Depois de escolher a fronteira, avaliar o canal:
+
+```text
+Shell → remote diretamente relacionado     → props ou opções de mount
+Remote → shell com notificação pequena     → callback ou Custom Event
+Estado navegável e compartilhável          → URL
+Dado durável, multiusuário ou de negócio   → backend
+Estado muito coordenado na mesma página    → store, com ownership explícito
+```
+
+Exemplo humano para o futuro e-book:
+
+```text
+Novo MFE: checkout
+
+Entradas:
+- identificador do carrinho
+- moeda
+- usuário autenticado
+
+Saídas:
+- checkout iniciado
+- pagamento concluído
+- checkout cancelado
+
+Dados duráveis:
+- carrinho
+- pagamento
+- pedido
+→ pertencem ao backend, não ao window
+```
+
+Frase de fechamento:
+
+> Ao criar um MFE, planeje cedo a fronteira e os contratos. Use `window` apenas quando Custom Events forem o canal adequado — não como comunicação padrão para tudo.
