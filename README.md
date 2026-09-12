@@ -16,6 +16,14 @@ A estrutura será preenchida gradualmente nas próximas etapas.
 
 Os três apps possuem servidores e builds próprios. Products é composto como componente React na rota `/products`; Account é montado por lifecycle Vue na rota `/account`.
 
+## Pacotes compartilhados
+
+| Pacote | Resolução atual | Responsabilidade |
+| --- | --- | --- |
+| `@mfe-lab/contracts` | `workspace:*` | Tipos e nomes de eventos framework-agnostic |
+
+`contracts` é resolvido durante instalação e build. Ele não é um remote de Module Federation, não contém estado e não depende de React, Vue ou DOM.
+
 ## Comandos gerais
 
 ```powershell
@@ -26,6 +34,8 @@ pnpm run check
 ```
 
 `pnpm run dev` inicia os três apps em paralelo. Os demais comandos executam as tarefas correspondentes em todos os apps existentes.
+
+Antes de iniciar, tipar ou buildar os apps, os scripts da raiz compilam `@mfe-lab/contracts`, garantindo que `dist/index.js` e `dist/index.d.ts` estejam disponíveis aos consumidores.
 
 Para servir os builds de produção usados no experimento de deploy independente:
 

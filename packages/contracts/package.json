@@ -1,0 +1,27 @@
+{
+  "name": "@mfe-lab/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rslib build",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@rslib/core": "0.23.2",
+    "typescript": "7.0.2"
+  }
+}

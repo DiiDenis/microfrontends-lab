@@ -22,6 +22,17 @@ O guia deverá:
 
 O e-book final deve incorporar as ilustrações e os diagramas conceituais usados durante a conversa, redesenhados com identidade visual consistente e acompanhados de texto alternativo. Eles não devem ser tratados como decoração: cada figura precisa explicar uma relação que seria mais difícil compreender somente em prosa.
 
+Usar `Manual_DeNode_Usuario.pdf` como referência de ritmo editorial e aplicar dois tipos de página:
+
+- páginas especiais, como capa, abertura de parte, divisória de capítulo ou composição com imagem de fundo, devem ocupar 100% da largura e da altura do A4, sem as margens brancas do miolo;
+- páginas comuns de conteúdo devem preservar margens confortáveis, cabeçalho, rodapé e paginação consistentes;
+- screenshots, diagramas e figuras inseridos em uma página de conteúdo continuam dentro da área editorial e não viram full bleed automaticamente;
+- imagens usadas como fundo de página devem preencher toda a página, sem faixas brancas, distorção ou margem padrão;
+- textos em páginas full bleed precisam manter uma margem interna de segurança, mesmo que o fundo alcance todas as bordas;
+- capa e divisórias não devem herdar cabeçalho, rodapé ou numeração visual do miolo.
+
+Em resumo: o fundo pode ir até a borda; o conteúdo textual continua respeitando uma área segura.
+
 Preservar especialmente:
 
 - os três apps separados antes da federação;
@@ -43,6 +54,173 @@ Além dos diagramas já versionados em `docs/diagrams`, reconstruir no e-book as
 > O shell registra o remote por uma URL configurável. Quando a rota é acessada, o runtime consulta o manifest, encontra os assets do módulo exposto, negocia as dependências compartilhadas e renderiza o componente. Loading e falhas ficam isolados na fronteira da rota.
 
 Essa explicação deve aparecer no e-book depois que `producer`, `consumer`, `exposes`, `remotes` e manifest já tiverem sido apresentados separadamente.
+
+## Receita humana e reproduzível
+
+O e-book deve apresentar cada integração duas vezes: primeiro como uma história simples, que o leitor consegue visualizar, e depois como configuração técnica. A leitura precisa permitir que alguém reproduza o padrão sem tratar Module Federation como mágica.
+
+### Começar com três projetos independentes
+
+Usar uma explicação semelhante a:
+
+> Pense em três projetos: Shell, Products e Account. Cada um abre sozinho, possui seu próprio servidor, sua própria porta e seu próprio build. Nesse momento eles sabem que os outros existem apenas porque nós, desenvolvedores, sabemos; tecnicamente ainda não existe composição.
+
+```text
+shell-react      http://localhost:3000
+products-react   http://localhost:3001
+account-vue      http://localhost:3002
+```
+
+O pnpm executa e organiza os três projetos, mas não coloca uma interface dentro da outra. Essa composição só começa quando um projeto publica uma superfície e outro projeto decide consumi-la.
+
+### Transformar Products em algo consumível
+
+Apresentar o raciocínio nesta ordem:
+
+1. Products instala o plugin de Module Federation compatível com Rsbuild.
+2. Products escolhe um nome federado estável: `products`.
+3. Em `exposes`, cria um nome público para o componente.
+4. Esse nome público aponta para o arquivo físico que existe somente dentro de Products.
+5. O build gera manifest, remote entry e chunks carregáveis.
+
+```typescript
+pluginModuleFederation({
+  name: 'products',
+  exposes: {
+    './ProductApp': './src/ProductApp.tsx',
+  },
+  manifest: true,
+});
+```
+
+Explicar visualmente o mapa de nomes:
+
+```text
+Nome do remote       products
+Nome público         ./ProductApp
+Arquivo físico       ./src/ProductApp.tsx
+Import do consumer   products/ProductApp
+```
+
+Preservar esta frase:
+
+> `./ProductApp` não é uma pasta nova. É o nome público escolhido pelo producer. O valor `./src/ProductApp.tsx` é o endereço físico privado da implementação.
+
+Depois do build, explicar os artefatos sem excesso de detalhes:
+
+```text
+mf-manifest.json  → catálogo que descreve o remote
+remoteEntry.js    → entrada executável do container federado
+chunks com hash   → arquivos que carregam o código real e o CSS
+@mf-types.zip     → contrato TypeScript gerado para consumers
+```
+
+### Ensinar o shell a encontrar Products
+
+Mostrar que o shell precisa de duas informações diferentes:
+
+1. onde encontrar o remote;
+2. qual módulo público deseja carregar.
+
+```typescript
+pluginModuleFederation({
+  name: 'shell',
+  remotes: {
+    products: 'products@http://localhost:3001/mf-manifest.json',
+  },
+});
+```
+
+```typescript
+const remoteModule = await import('products/ProductApp');
+```
+
+Traduzir o import em linguagem humana:
+
+```text
+products/ProductApp
+    │         │
+    │         └── módulo público ./ProductApp
+    └──────────── alias products registrado no shell
+```
+
+> O shell não conhece `apps/products-react/src/ProductApp.tsx`. Ele conhece somente o alias `products`, a URL do manifest e o nome público `ProductApp`.
+
+### Repetir o raciocínio com Vue, destacando a diferença
+
+Account segue o mesmo processo de publicação, mas não expõe um componente Vue diretamente para React. Ele expõe um lifecycle neutro:
+
+```typescript
+pluginModuleFederation({
+  name: 'account',
+  exposes: {
+    './mount': './src/mount.ts',
+  },
+  manifest: true,
+});
+```
+
+Mapa equivalente:
+
+```text
+Nome do remote       account
+Nome público         ./mount
+Arquivo físico       ./src/mount.ts
+Import do consumer   account/mount
+```
+
+No shell:
+
+```typescript
+const accountModule = await import('account/mount');
+
+const handle = accountModule.mount(container, {
+  source: 'shell-react',
+  initialUserName: 'Denis',
+});
+```
+
+Ao sair da rota:
+
+```typescript
+handle.unmount();
+```
+
+Preservar a comparação direta:
+
+```text
+React → React
+O producer expõe um componente.
+O shell renderiza esse componente na árvore React existente.
+
+Vue → React
+O producer expõe mount/unmount.
+O shell fornece uma div e Vue controla o conteúdo interno.
+```
+
+### Checklist visual de reprodução
+
+Cada capítulo prático do e-book deve terminar com um quadro de consulta rápida:
+
+```text
+NO PRODUCER
+[ ] instalar e registrar o plugin
+[ ] escolher o nome federado
+[ ] declarar exposes: nome público → arquivo físico
+[ ] gerar manifest
+[ ] manter o modo standalone
+[ ] conferir manifest, remote entry e chunks
+
+NO CONSUMER
+[ ] registrar alias → URL do manifest
+[ ] importar alias/módulo-publicado
+[ ] carregar de forma assíncrona
+[ ] mostrar loading
+[ ] isolar erros
+[ ] respeitar o contrato e o lifecycle
+```
+
+Sempre incluir uma seção “onde cada coisa está” com links ou caminhos dos arquivos reais do laboratório. O objetivo é que o leitor consiga olhar o diagrama, comparar producer e consumer e reconstruir a integração sem decorar configuração solta.
 
 ## Linha de aprendizado construída
 
@@ -243,6 +421,30 @@ Frase curta para preservar:
 
 > React não renderiza Vue: React decide quando existe um container, e o adapter traduz essa existência em `mount` e `unmount`.
 
+### 18. Contrato compartilhado não é estado compartilhado
+
+- Imagine que Shell, Products e Account trabalhavam com cópias separadas do mesmo formulário de acordo. Na etapa 11, essas cópias foram substituídas por um documento comum chamado `@mfe-lab/contracts`.
+- O pacote contém formatos e nomes: opções de montagem, handle de desmontagem, papéis aceitos, nomes de eventos e formatos de payload. Ele não guarda o usuário atual, o contador atual nem qualquer store.
+- `workspace:*` diz ao pnpm para ligar o consumidor ao pacote local do mesmo workspace. O consumidor encontra o pacote durante install/build, não consultando um manifest em runtime.
+- O `package.json` do pacote aponta para `dist/index.js` e `dist/index.d.ts`; por isso o build do pacote acontece antes do typecheck e do build dos apps.
+- Alterar um contrato não modifica um consumer já compilado. O consumer precisa receber a nova versão ou conteúdo, passar pelo typecheck e gerar outro build.
+- TypeScript verifica código durante desenvolvimento e compilação, mas os tipos são apagados do JavaScript. Um payload vindo de evento, rede ou armazenamento pode estar errado em runtime; quando isso importa, é necessário validar dados de verdade.
+- Nenhum type guard foi criado apenas para preencher a arquitetura. Guards só devem existir quando algum dado desconhecido for realmente validado, e então merecem testes unitários.
+
+Comparação para consulta rápida:
+
+```text
+PACOTE DE CONTRATOS
+install/build → tipos e constantes entram no consumidor → requer rebuild para atualizar
+
+MODULE FEDERATION
+runtime → shell consulta manifest → remote pode mudar sem rebuild do shell se preservar contrato
+```
+
+Frase curta para preservar:
+
+> Compartilhar contrato é concordar sobre o formato da conversa; compartilhar estado seria dividir a informação viva que muda durante a conversa.
+
 ## Glossário inicial do e-book
 
 - **Shell/host:** aplicação que controla a experiência principal e compõe partes externas.
@@ -274,6 +476,7 @@ Frase curta para preservar:
 - `docs/lessons/08-independent-remote-deploy.md`
 - `docs/lessons/09-vue-lifecycle-remote.md`
 - `docs/lessons/10-react-consumes-vue.md`
+- `docs/lessons/11-build-time-contract-package.md`
 - `docs/diagrams/05-before-federation.md`
 - `docs/diagrams/07-products-runtime-flow.md`
 - `docs/diagrams/10-react-host-vue-lifecycle.md`

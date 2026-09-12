@@ -12,3 +12,4 @@
 | 08 | Provar deploy independente do remote | Concluída |
 | 09 | Expor o lifecycle do Vue como remote | Concluída |
 | 10 | Montar o Vue dentro do host React | Concluída |
+| 11 | Criar pacote de contratos em build time | Concluída |

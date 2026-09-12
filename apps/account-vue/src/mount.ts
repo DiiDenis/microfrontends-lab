@@ -1,7 +1,8 @@
-import { createAccountApp } from './createAccountApp';
-import type { AccountMountHandle, AccountMountOptions } from './mountContract';
+import type { AccountMountHandle, AccountMountOptions } from '@mfe-lab/contracts';
 
-export type { AccountMountHandle, AccountMountOptions } from './mountContract';
+import { createAccountApp } from './createAccountApp';
+
+export type { AccountMountHandle, AccountMountOptions } from '@mfe-lab/contracts';
 
 const mountedAccounts = new WeakMap<HTMLElement, AccountMountHandle>();
 

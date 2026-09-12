@@ -1,12 +1,8 @@
 declare module 'account/mount' {
-  export interface AccountMountOptions {
-    initialUserName: string;
-    source: string;
-  }
-
-  export interface AccountMountHandle {
-    unmount(): void;
-  }
+  export type AccountMountOptions =
+    import('@mfe-lab/contracts').AccountMountOptions;
+  export type AccountMountHandle =
+    import('@mfe-lab/contracts').AccountMountHandle;
 
   export function mount(
     container: HTMLElement,

@@ -1,7 +1,6 @@
 <script setup lang="ts">
+import type { AccountRole } from '@mfe-lab/contracts';
 import { ref } from 'vue';
-
-type AccountRole = 'Administrador' | 'Operador';
 
 const props = defineProps<{
   initialUserName: string;
