@@ -19,7 +19,7 @@ export function mount(
   }
 
   const accountApp = createAccountApp(options);
-  let isMounted = true;
+  let isMounted = false;
 
   const handle: AccountMountHandle = {
     unmount() {
@@ -27,14 +27,37 @@ export function mount(
         return;
       }
 
-      accountApp.unmount();
-      mountedAccounts.delete(container);
-      isMounted = false;
+      try {
+        accountApp.unmount();
+      } finally {
+        mountedAccounts.delete(container);
+        container.replaceChildren();
+        isMounted = false;
+      }
     },
   };
 
-  accountApp.mount(container);
-  mountedAccounts.set(container, handle);
+  try {
+    accountApp.mount(container);
+    isMounted = true;
+    mountedAccounts.set(container, handle);
+  } catch (error: unknown) {
+    try {
+      accountApp.unmount();
+    } catch (cleanupError: unknown) {
+      if (import.meta.env.DEV) {
+        console.error(
+          'Falha ao limpar uma montagem incompleta de Account.',
+          cleanupError,
+        );
+      }
+    } finally {
+      mountedAccounts.delete(container);
+      container.replaceChildren();
+    }
+
+    throw error;
+  }
 
   return handle;
 }

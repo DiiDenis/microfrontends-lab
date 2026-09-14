@@ -3,11 +3,16 @@ import { LabButton } from '@mfe-lab/ui-react';
 
 import type { AccountMountHandle } from 'account/mount';
 
+import styles from './App.module.css';
+
 type RemoteStatus = 'error' | 'loading' | 'mounted';
+type AccountFailurePhase = 'import' | 'mount';
 
 export function VueRemoteRoute() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<RemoteStatus>('loading');
+  const [failurePhase, setFailurePhase] =
+    useState<AccountFailurePhase | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -15,20 +20,50 @@ export function VueRemoteRoute() {
 
     setStatus('loading');
 
+    function reportFailure(phase: AccountFailurePhase, error: unknown) {
+      if (cancelled) {
+        return;
+      }
+
+      if (import.meta.env.DEV) {
+        console.error(
+          phase === 'import'
+            ? 'Falha ao importar o remote Account.'
+            : 'Falha ao montar o remote Account.',
+          error,
+        );
+      }
+
+      containerRef.current?.replaceChildren();
+      setFailurePhase(phase);
+      setStatus('error');
+    }
+
     async function mountAccount() {
+      let accountModule: typeof import('account/mount');
+
       try {
-        const accountModule = await import('account/mount');
+        accountModule = await import('account/mount');
+      } catch (error: unknown) {
+        reportFailure('import', error);
+        return;
+      }
 
-        if (cancelled) {
-          return;
-        }
+      if (cancelled) {
+        return;
+      }
 
-        const container = containerRef.current;
+      const container = containerRef.current;
 
-        if (!container) {
-          throw new Error('Container do Account não está disponível.');
-        }
+      if (!container) {
+        reportFailure(
+          'mount',
+          new Error('Container do Account não está disponível.'),
+        );
+        return;
+      }
 
+      try {
         accountHandle = accountModule.mount(container, {
           source: 'shell-react',
           initialUserName: 'Denis',
@@ -38,12 +73,9 @@ export function VueRemoteRoute() {
           setStatus('mounted');
         }
       } catch (error: unknown) {
-        if (cancelled) {
-          return;
-        }
-
-        console.error('Falha ao carregar o remote Account.', error);
-        setStatus('error');
+        accountHandle?.unmount();
+        accountHandle = undefined;
+        reportFailure('mount', error);
       }
     }
 
@@ -51,7 +83,17 @@ export function VueRemoteRoute() {
 
     return () => {
       cancelled = true;
-      accountHandle?.unmount();
+
+      try {
+        accountHandle?.unmount();
+      } catch (error: unknown) {
+        if (import.meta.env.DEV) {
+          console.error('Falha no cleanup do remote Account.', error);
+        }
+      } finally {
+        accountHandle = undefined;
+        containerRef.current?.replaceChildren();
+      }
     };
   }, []);
 
@@ -64,9 +106,13 @@ export function VueRemoteRoute() {
       {status === 'loading' && <p role="status">Carregando Account...</p>}
 
       {status === 'error' && (
-        <div role="alert">
+        <div className={styles.remoteFallback} role="alert">
           <h1>Account indisponível</h1>
-          <p>O remote Vue não pôde ser carregado.</p>
+          <p>
+            {failurePhase === 'mount'
+              ? 'O remote Account foi carregado, mas falhou durante a montagem.'
+              : 'Não foi possível importar o remote Account.'}
+          </p>
           <LabButton onClick={retry}>
             Tentar novamente
           </LabButton>

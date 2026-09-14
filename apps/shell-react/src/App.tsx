@@ -15,15 +15,13 @@ import {
   UI_WEB_VERSION,
 } from '@mfe-lab/ui-web';
 import '@mfe-lab/ui-web/react';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
-import { RemoteRouteErrorBoundary } from './RemoteRouteErrorBoundary';
+import { ProductsRemoteRoute } from './ProductsRemoteRoute';
 import { TechnicalPanel } from './TechnicalPanel';
 import { VueRemoteRoute } from './VueRemoteRoute';
 import styles from './App.module.css';
-
-const ProductsRemoteModule = lazy(() => import('./ProductsRemoteModule'));
 
 registerLabStatusChip();
 
@@ -33,16 +31,6 @@ function HomePage() {
       <h1>Home</h1>
       <p>Esta página pertence ao shell.</p>
     </section>
-  );
-}
-
-function ProductsRemoteRoute() {
-  return (
-    <RemoteRouteErrorBoundary>
-      <Suspense fallback={<p role="status">Carregando Products...</p>}>
-        <ProductsRemoteModule />
-      </Suspense>
-    </RemoteRouteErrorBoundary>
   );
 }
 

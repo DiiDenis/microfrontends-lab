@@ -1159,3 +1159,79 @@ Manifests ............... :3001 / :3002
 ```
 
 Explicar que duas versões iguais na tela ainda poderiam vir de duas cópias distintas. Para tornar a reutilização concreta sem ler internals, Products entrega uma referência pública a `useState` e o Shell a compara com a sua usando `===`. O resultado `sim` significa que ambas as fronteiras receberam a mesma identidade de função naquela execução.
+
+## 26. Quando o restaurante parceiro fecha: resiliência em runtime
+
+Retomar a analogia do restaurante ao vivo:
+
+> O Shell continua sendo o salão e o cardápio principal. Products e Account são cozinhas parceiras. Se uma cozinha ficar indisponível, o salão não deve apagar as luzes nem expulsar todo mundo; apenas aquela parte do pedido precisa mostrar uma alternativa.
+
+Mostrar as fronteiras como caixas independentes:
+
+```text
+SHELL
+├── header e navegação ........ continuam vivos
+├── Home ...................... continua local
+├── /products
+│   ├── loading
+│   ├── falha ao buscar ....... fallback Products
+│   └── falha ao renderizar ... fallback Products
+└── /account
+    ├── loading do import
+    ├── falha ao importar ..... fallback Account
+    ├── falha no mount ........ fallback Account
+    └── saída da rota ......... unmount + cleanup
+```
+
+Frase humana para fixação:
+
+> Import falhou significa “a encomenda nem chegou”. Render ou mount falhou significa “a caixa chegou, mas quebrou quando tentamos usar”.
+
+### Retry que faz alguma coisa de verdade
+
+Um botão que apenas troca `hasError` para `false` pode renderizar novamente, mas não garante nova busca de um módulo cujo erro ficou guardado. No laboratório:
+
+```text
+erro de renderização → limpar a Error Boundary e tentar renderizar de novo
+erro de import → reload da rota e nova tentativa do runtime
+```
+
+Explicar que reload completo não é a única solução possível, mas é a mais transparente neste estágio. Uma solução granular exigiria APIs de runtime, invalidação de cache, limites de tentativa e métricas.
+
+### O cache pode contar uma história atrasada
+
+Registrar a descoberta real do laboratório: desligamos uma origem já acessada, mas a tela ainda conseguiu carregar porque manifest e chunks estavam em cache. Ao usar uma URL inédita, a falha apareceu.
+
+```text
+servidor desligado agora
+  + recurso já guardado no navegador
+  = a tela ainda pode funcionar por algum tempo
+```
+
+Isso prepara o capítulo futuro sobre CDN: manifest costuma precisar de revalidação curta; chunks com hash podem ter cache longo.
+
+### O guarda da troca rápida
+
+Usar uma ilustração temporal:
+
+```text
+t0 entra em /account → import começa
+t1 sai para Home      → cleanup marca cancelled = true
+t2 import termina     → vê cancelled e não chama mount
+```
+
+Sem essa verificação, Vue poderia tentar montar num container removido, atualizar estado de um adapter desmontado ou deixar recursos órfãos.
+
+### A configuração também precisa ser observável
+
+O painel revelou um bug: o Shell mostrava sempre os fallbacks 3001/3002 mesmo quando a variável era passada pelo terminal. A precedência correta ficou:
+
+```text
+process.env → arquivo .env → fallback localhost
+```
+
+Usar isso para ensinar que observabilidade não é somente registrar erros; também é conseguir responder “qual URL este build está realmente usando?”.
+
+Frase para entrevista:
+
+> Eu isolo loading, falha de import e falha de renderização ou montagem na fronteira de cada remote. O fallback pertence ao host, o cleanup respeita o lifecycle do framework remoto, e Retry, cache e logs são tratados como decisões operacionais, não apenas visuais.

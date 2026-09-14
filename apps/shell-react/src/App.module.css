@@ -34,6 +34,13 @@
   padding: var(--mfe-space-4);
 }
 
+.remoteFallback {
+  border: 1px solid var(--mfe-color-border);
+  border-radius: var(--mfe-radius-medium);
+  max-width: 42rem;
+  padding: var(--mfe-space-3);
+}
+
 .technicalPanel {
   background: var(--mfe-color-surface-muted);
   border-bottom: 1px solid var(--mfe-color-border);
