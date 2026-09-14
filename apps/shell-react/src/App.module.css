@@ -16,11 +16,6 @@
   gap: var(--mfe-space-1);
 }
 
-.owner {
-  color: var(--mfe-color-accent);
-  font-weight: 700;
-}
-
 .navigation {
   display: flex;
   gap: var(--mfe-space-3);

@@ -11,11 +11,6 @@
   gap: var(--mfe-space-1);
 }
 
-.owner {
-  color: var(--mfe-color-accent);
-  font-weight: 700;
-}
-
 .productList {
   display: grid;
   gap: var(--mfe-space-3);
@@ -32,14 +27,6 @@
   display: flex;
   justify-content: space-between;
   padding: var(--mfe-space-3);
-}
-
-.product button {
-  background: var(--mfe-color-accent);
-  border: 0;
-  border-radius: var(--mfe-radius-small);
-  color: var(--mfe-color-surface);
-  padding: var(--mfe-space-2) var(--mfe-space-3);
 }
 
 .productName {

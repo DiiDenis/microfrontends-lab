@@ -15,3 +15,4 @@
 | 11 | Criar pacote de contratos em build time | Concluída |
 | 12 | Comunicar os micro frontends com Custom Events | Concluída |
 | 13 | Criar pacote compartilhado de design tokens | Concluída |
+| 14 | Criar biblioteca de UI React em build time | Concluída |

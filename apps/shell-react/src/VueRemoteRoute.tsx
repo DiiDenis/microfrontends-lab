@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { LabButton } from '@mfe-lab/ui-react';
 
 import type { AccountMountHandle } from 'account/mount';
 
@@ -66,9 +67,9 @@ export function VueRemoteRoute() {
         <div role="alert">
           <h1>Account indisponível</h1>
           <p>O remote Vue não pôde ser carregado.</p>
-          <button type="button" onClick={retry}>
+          <LabButton onClick={retry}>
             Tentar novamente
-          </button>
+          </LabButton>
         </div>
       )}
 

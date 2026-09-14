@@ -4,9 +4,9 @@
   "private": true,
   "packageManager": "pnpm@11.21.0",
   "scripts": {
-    "dev": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm --parallel --filter ./apps/* run dev",
-    "build": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm --filter ./apps/* run build",
-    "typecheck": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm run typecheck:contracts && pnpm run typecheck:design-tokens && pnpm --filter ./apps/* run typecheck",
+    "dev": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm run build:ui-react && pnpm --parallel --filter ./apps/* run dev",
+    "build": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm run build:ui-react && pnpm --filter ./apps/* run build",
+    "typecheck": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm run build:ui-react && pnpm run typecheck:contracts && pnpm run typecheck:design-tokens && pnpm run typecheck:ui-react && pnpm --filter ./apps/* run typecheck",
     "check": "pnpm run typecheck && pnpm --filter ./apps/* run build",
     "dev:shell": "pnpm --filter @mfe-lab/shell-react dev",
     "dev:products": "pnpm --filter @mfe-lab/products-react dev",
@@ -16,13 +16,15 @@
     "build:account": "pnpm --filter @mfe-lab/account-vue build",
     "build:contracts": "pnpm --filter @mfe-lab/contracts build",
     "build:design-tokens": "pnpm --filter @mfe-lab/design-tokens build",
+    "build:ui-react": "pnpm --filter @mfe-lab/ui-react build",
     "preview:shell": "pnpm --filter @mfe-lab/shell-react preview",
     "preview:products": "pnpm --filter @mfe-lab/products-react preview",
     "typecheck:shell": "pnpm --filter @mfe-lab/shell-react typecheck",
     "typecheck:products": "pnpm --filter @mfe-lab/products-react typecheck",
     "typecheck:account": "pnpm --filter @mfe-lab/account-vue typecheck",
     "typecheck:contracts": "pnpm --filter @mfe-lab/contracts typecheck",
-    "typecheck:design-tokens": "pnpm --filter @mfe-lab/design-tokens typecheck"
+    "typecheck:design-tokens": "pnpm --filter @mfe-lab/design-tokens typecheck",
+    "typecheck:ui-react": "pnpm --filter @mfe-lab/ui-react typecheck"
   },
   "engines": {
     "node": ">=24.18.0 <25"

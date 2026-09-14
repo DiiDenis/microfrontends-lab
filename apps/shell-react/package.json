@@ -12,6 +12,7 @@
   "dependencies": {
     "@mfe-lab/contracts": "workspace:*",
     "@mfe-lab/design-tokens": "workspace:*",
+    "@mfe-lab/ui-react": "workspace:*",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-router-dom": "7.18.2"

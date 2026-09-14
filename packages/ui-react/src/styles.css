@@ -1,0 +1,26 @@
+@import '@mfe-lab/design-tokens/tokens.css';
+
+.mfe-lab-ui-button {
+  background: var(--mfe-color-accent);
+  border: 0;
+  border-radius: var(--mfe-radius-small);
+  color: var(--mfe-color-surface);
+  cursor: pointer;
+  font: inherit;
+  padding: var(--mfe-space-2) var(--mfe-space-3);
+}
+
+.mfe-lab-ui-button:focus-visible {
+  outline: 2px solid var(--mfe-color-text);
+  outline-offset: 2px;
+}
+
+.mfe-lab-ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mfe-lab-ui-boundary-label {
+  color: var(--mfe-color-accent);
+  font-weight: 700;
+}

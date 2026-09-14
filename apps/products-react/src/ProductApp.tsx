@@ -4,6 +4,12 @@ import {
 } from '@mfe-lab/contracts';
 import { DESIGN_TOKENS_VERSION } from '@mfe-lab/design-tokens';
 import '@mfe-lab/design-tokens/tokens.css';
+import {
+  AppBoundaryLabel,
+  LabButton,
+  UI_REACT_VERSION,
+} from '@mfe-lab/ui-react';
+import '@mfe-lab/ui-react/styles.css';
 import { useEffect, useState } from 'react';
 
 import styles from './ProductApp.module.css';
@@ -31,8 +37,9 @@ export function ProductApp() {
   return (
     <main className={styles.app}>
       <div className={styles.ownership}>
-        <span className={styles.owner}>PRODUCTS · REACT · STANDALONE</span>
+        <AppBoundaryLabel label="PRODUCTS · REACT · STANDALONE" />
         <small>Design tokens: {DESIGN_TOKENS_VERSION}</small>
+        <small>UI React: {UI_REACT_VERSION}</small>
       </div>
       <h1>Produtos</h1>
       <p>Remote version: products-v2</p>
@@ -45,9 +52,9 @@ export function ProductApp() {
               <h2 className={styles.productName}>{product.name}</h2>
               <p>{product.price}</p>
             </div>
-            <button type="button" onClick={addItem}>
+            <LabButton onClick={addItem}>
               Adicionar
-            </button>
+            </LabButton>
           </li>
         ))}
       </ul>

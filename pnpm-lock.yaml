@@ -44,6 +44,9 @@ importers:
       '@mfe-lab/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
+      '@mfe-lab/ui-react':
+        specifier: workspace:*
+        version: link:../../packages/ui-react
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -78,6 +81,9 @@ importers:
       '@mfe-lab/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
+      '@mfe-lab/ui-react':
+        specifier: workspace:*
+        version: link:../../packages/ui-react
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -111,7 +117,7 @@ importers:
     devDependencies:
       '@rslib/core':
         specifier: 0.23.2
-        version: 0.23.2(typescript@7.0.2)
+        version: 0.23.2(@module-federation/runtime-tools@2.9.0)(typescript@7.0.2)
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -120,7 +126,35 @@ importers:
     devDependencies:
       '@rslib/core':
         specifier: 0.23.2
-        version: 0.23.2(typescript@7.0.2)
+        version: 0.23.2(@module-federation/runtime-tools@2.9.0)(typescript@7.0.2)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/ui-react:
+    dependencies:
+      '@mfe-lab/design-tokens':
+        specifier: workspace:*
+        version: link:../design-tokens
+    devDependencies:
+      '@rsbuild/plugin-react':
+        specifier: 2.1.0
+        version: 2.1.0(@rsbuild/core@2.1.13(@module-federation/runtime-tools@2.9.0))(@rspack/core@2.1.10(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))
+      '@rslib/core':
+        specifier: 0.23.2
+        version: 0.23.2(@module-federation/runtime-tools@2.9.0)(typescript@7.0.2)
+      '@types/react':
+        specifier: 19.2.18
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: 19.2.4
+        version: 19.2.4(@types/react@19.2.18)
+      react:
+        specifier: 19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: 19.2.8
+        version: 19.2.8(react@19.2.8)
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -1269,7 +1303,7 @@ snapshots:
       - '@vue/compiler-sfc'
       - vue
 
-  '@rslib/core@0.23.2(typescript@7.0.2)':
+  '@rslib/core@0.23.2(@module-federation/runtime-tools@2.9.0)(typescript@7.0.2)':
     dependencies:
       '@rsbuild/core': 2.1.13(@module-federation/runtime-tools@2.9.0)
       rsbuild-plugin-dts: 0.23.2(@rsbuild/core@2.1.13)(typescript@7.0.2)

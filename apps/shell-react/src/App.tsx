@@ -5,6 +5,11 @@ import {
 } from '@mfe-lab/contracts';
 import { DESIGN_TOKENS_VERSION } from '@mfe-lab/design-tokens';
 import '@mfe-lab/design-tokens/tokens.css';
+import {
+  AppBoundaryLabel,
+  UI_REACT_VERSION,
+} from '@mfe-lab/ui-react';
+import '@mfe-lab/ui-react/styles.css';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
@@ -69,8 +74,9 @@ export function App() {
     <div className={styles.shell}>
       <header className={styles.header}>
         <div className={styles.ownership}>
-          <span className={styles.owner}>SHELL · REACT</span>
+          <AppBoundaryLabel label="SHELL · REACT" />
           <small>Design tokens: {DESIGN_TOKENS_VERSION}</small>
+          <small>UI React: {UI_REACT_VERSION}</small>
         </div>
 
         <nav aria-label="Navegação principal">

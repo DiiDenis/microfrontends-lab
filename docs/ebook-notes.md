@@ -479,6 +479,7 @@ Frase curta para preservar:
 - `docs/lessons/11-build-time-contract-package.md`
 - `docs/lessons/12-cross-mfe-events.md`
 - `docs/lessons/13-design-tokens-package.md`
+- `docs/lessons/14-react-ui-npm-package.md`
 - `docs/diagrams/05-before-federation.md`
 - `docs/diagrams/07-products-runtime-flow.md`
 - `docs/diagrams/10-react-host-vue-lifecycle.md`
@@ -730,3 +731,104 @@ O pacote é ligado por `workspace:*` e incluído durante o build de cada consumi
 O e-book deve mostrar o erro encontrado no laboratório: o primeiro build não gerou o CSS porque o bundler eliminou um import sem exportação observável. Marcar `**/*.css` como `sideEffects` explicou, na prática, que importar CSS causa um efeito no documento mesmo sem retornar um valor JavaScript. `output.target: 'web'` também é necessário porque Rslib tem alvo Node por padrão.
 
 Alertar sobre versões divergentes. Como `:root` é global, dois remotes podem trazer versões diferentes do mesmo nome e a cascata decidir qual valor vence pela ordem de carregamento. Versionamento ajuda adoção e rollback, mas não elimina a necessidade de compatibilidade e coordenação.
+
+## 21. Biblioteca React: reutilização não é micro frontend
+
+Usar a seguinte evolução didática:
+
+```text
+design-tokens
+└── compartilha valores visuais entre qualquer framework
+
+ui-react
+└── compartilha pequenos componentes somente entre consumidores React
+
+ProductApp remote
+└── entrega um domínio e uma interface em runtime
+```
+
+`LabButton` e `AppBoundaryLabel` entram no shell e em Products durante o build de cada consumidor. Eles não possuem servidor, manifest ou deploy próprio. Por isso uma biblioteca de componentes não é automaticamente um micro frontend.
+
+### Analogia do motor
+
+`peerDependencies` pode ser explicado assim:
+
+> A biblioteca é uma peça feita para um modelo de motor, mas não leva outro motor dentro da caixa. O aplicativo informa qual React compatível está instalado e a peça usa esse React.
+
+Se `ui-react` levasse React dentro de seu bundle, o shell poderia terminar com React A e a biblioteca com React B. Além do peso, Hooks, Context e identidade da árvore poderiam deixar de concordar.
+
+Separar as categorias:
+
+```text
+dependencies
+└── o pacote precisa disso para funcionar quando distribuído
+
+devDependencies
+└── o autor precisa disso para desenvolver, tipar e construir
+
+peerDependencies
+└── o consumidor precisa fornecer uma versão compatível
+```
+
+O build deve ser mostrado no e-book: o pequeno `dist/index.js` contém import de `react/jsx-runtime` e não uma cópia da implementação React. Essa evidência torna “React externo” concreto.
+
+### Build time versus runtime novamente
+
+```text
+Atualizar ui-react
+→ publicar/ligar nova versão
+→ instalar no consumidor
+→ rebuildar consumidor
+→ fazer deploy do consumidor
+
+Atualizar ProductApp remote preservando contrato
+→ rebuildar Products
+→ fazer deploy de Products
+→ shell consulta o manifest em runtime
+```
+
+Frase para memorizar:
+
+> `ui-react` compartilha peças no build; `ProductApp` entrega uma aplicação de domínio no runtime.
+
+Vue não usa naturalmente `LabButton` porque um componente React é entendido pelo reconciliador React, enquanto o template Vue é entendido pelo lifecycle e renderer Vue. Compartilhar tokens é neutro; compartilhar componentes de framework exige compatibilidade, wrapper ou outra fronteira web.
+
+### `workspace:*`, registry e fotografias com tags
+
+Deixar claro que `workspace:*` não é uma solução apenas didática. Ele é comum quando aplicações e bibliotecas são desenvolvidas no mesmo monorepo. O link local existe durante instalação e build; o navegador em produção recebe somente os artefatos compilados.
+
+```text
+Mesmo monorepo e mesma esteira
+→ workspace:* costuma ser adequado
+
+Repositórios, equipes ou ciclos de versão independentes
+→ registry privado costuma ser adequado
+```
+
+O Verdaccio demonstrará o segundo fluxo sem publicar nada no npm público. Os apps deixarão de resolver os pacotes diretamente pelo workspace e instalarão versões publicadas no registry local. Isso não substitui Module Federation: Verdaccio distribui pacotes de build time; o manifest distribui remotes em runtime.
+
+Evitar deixar alguns apps usando o registry e outros usando links locais apenas para demonstrar os dois modelos. Uma arquitetura híbrida tornaria os experimentos de atualização difíceis de interpretar. Em vez de duplicar projetos, preservar fotografias importantes com commits e tags Git.
+
+Analogia para o e-book:
+
+> Branch é uma estrada que continua sendo construída. Tag é uma placa fixa indicando um ponto daquela estrada.
+
+Exemplo visual:
+
+```text
+A ── B ── C ── D
+     ↑         ↑
+etapa-14     main
+workspace   continua avançando
+```
+
+Comandos a explicar:
+
+```bash
+git tag etapa-14-workspace-packages
+git show etapa-14-workspace-packages
+git switch --detach etapa-14-workspace-packages
+git switch main
+```
+
+Assim, o leitor poderá consultar e executar o estado com `workspace:*` pelo commit marcado, enquanto a linha principal evolui posteriormente para o Verdaccio.
