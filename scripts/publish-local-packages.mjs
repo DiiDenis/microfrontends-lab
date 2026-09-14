@@ -3,12 +3,27 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const registryUrl = 'http://127.0.0.1:4873/';
-const packageDirectories = [
-  'packages/contracts',
-  'packages/design-tokens',
-  'infra/verdaccio/seed/ui-react-1.0.0',
-  'packages/ui-react',
-  'packages/ui-web',
+const packageArtifacts = [
+  {
+    manifestDirectory: 'packages/contracts',
+    tarball: 'infra/verdaccio/seed/tarballs/mfe-lab-contracts-1.0.0.tgz',
+  },
+  {
+    manifestDirectory: 'packages/design-tokens',
+    tarball: 'infra/verdaccio/seed/tarballs/mfe-lab-design-tokens-1.0.0.tgz',
+  },
+  {
+    manifestDirectory: 'infra/verdaccio/seed/ui-react-1.0.0',
+    tarball: 'infra/verdaccio/seed/tarballs/mfe-lab-ui-react-1.0.0.tgz',
+  },
+  {
+    manifestDirectory: 'packages/ui-react',
+    tarball: 'infra/verdaccio/seed/tarballs/mfe-lab-ui-react-1.1.0.tgz',
+  },
+  {
+    manifestDirectory: 'packages/ui-web',
+    tarball: 'infra/verdaccio/seed/tarballs/mfe-lab-ui-web-1.0.0.tgz',
+  },
 ];
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const pnpmCommand = 'pnpm';
@@ -39,13 +54,12 @@ async function isPublished(packageName, version) {
   return Object.hasOwn(metadata.versions ?? {}, version);
 }
 
-function publishPackage(packageDirectory, packageName, version) {
+function publishPackage(tarball, packageName, version) {
   console.log(`Publicando ${packageName}@${version}...`);
 
   const publishArguments = [
-    '--dir',
-    packageDirectory,
     'publish',
+    tarball,
     '--registry',
     registryUrl,
     '--access',
@@ -81,13 +95,13 @@ if (!pingResponse.ok) {
   throw new Error(`Verdaccio indisponível em ${registryUrl}.`);
 }
 
-for (const packageDirectory of packageDirectories) {
-  const manifest = await readPackageManifest(packageDirectory);
+for (const { manifestDirectory, tarball } of packageArtifacts) {
+  const manifest = await readPackageManifest(manifestDirectory);
 
   if (await isPublished(manifest.name, manifest.version)) {
     console.log(`${manifest.name}@${manifest.version} já está publicado; pulando.`);
     continue;
   }
 
-  publishPackage(packageDirectory, manifest.name, manifest.version);
+  publishPackage(tarball, manifest.name, manifest.version);
 }

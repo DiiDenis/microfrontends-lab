@@ -221,4 +221,4 @@ pnpm run bootstrap:local
 pnpm run packages:verify:registry
 ```
 
-O seed em `infra/verdaccio/seed/ui-react-1.0.0` representa a versão histórica que o Shell ainda consome. Um registry de empresa preservaria essa versão; o seed permite reconstruir o mesmo estado quando o Verdaccio efêmero começa vazio.
+Os tarballs em `infra/verdaccio/seed/tarballs` são os artifacts imutáveis cujas integridades estão registradas no lockfile. A pasta `seed/ui-react-1.0.0` mantém também uma representação legível da versão histórica que o Shell ainda consome. Um registry de empresa preservaria essas publicações; os seeds permitem reconstruir o mesmo estado quando o Verdaccio efêmero começa vazio.

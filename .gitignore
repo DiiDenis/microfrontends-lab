@@ -8,6 +8,7 @@ coverage/
 playwright-report/
 test-results/
 *.tgz
+!infra/verdaccio/seed/tarballs/*.tgz
 pnpm-publish-summary.json
 .env
 .env.*

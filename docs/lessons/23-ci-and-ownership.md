@@ -118,7 +118,9 @@ seed 1.0.0        → histórico, não é editado como fonte atual
 packages/ui-react → fonte atual 1.1.0
 ```
 
-O seed não é cache do storage. Ele é uma entrada versionada e revisável necessária para reproduzir o histórico do experimento.
+Além da representação legível de `ui-react@1.0.0`, `infra/verdaccio/seed/tarballs` guarda os cinco artifacts exatos cujas integridades estão registradas no lockfile. Publicar novamente uma pasta pode gerar bytes diferentes entre momentos ou sistemas operacionais; manter o mesmo número de versão para esse conteúdo novo violaria a imutabilidade de uma publicação.
+
+O seed não é cache do storage. Ele é uma entrada versionada e revisável necessária para reproduzir o histórico do experimento. Uma mudança real exige novo número de versão e novo tarball.
 
 ## Como provamos que não são links de workspace
 
@@ -203,7 +205,8 @@ Nenhum dos dois substitui o outro. Um teste integrado único localiza mal a orig
 - `.github/workflows/ci.yml`: gatilhos, jobs, ordem e comandos da CI.
 - `scripts/verify-registry-packages.mjs`: prova versões e origem instalada.
 - `scripts/publish-local-packages.mjs`: publica as versões necessárias em ordem.
-- `infra/verdaccio/seed/ui-react-1.0.0`: snapshot histórico para registry vazio.
+- `infra/verdaccio/seed/ui-react-1.0.0`: representação legível do snapshot histórico.
+- `infra/verdaccio/seed/tarballs`: artifacts imutáveis usados para semear um registry vazio.
 - `package.json`: bootstrap completo e comandos de verificação.
 - `pnpm-workspace.yaml`: mantém links automáticos de workspace desabilitados.
 
@@ -237,7 +240,7 @@ docker run --rm `
 5. Abra cada job para relacionar steps e comandos.
 6. Confirme que nenhum step publica externamente ou faz deploy.
 
-## Resultado observado localmente
+## Resultado observado
 
 Em 14 de setembro de 2026:
 
@@ -250,7 +253,7 @@ Em 14 de setembro de 2026:
 - actionlint `1.7.12` aprovou o workflow sem erros;
 - os comandos equivalentes completos passaram localmente.
 
-A execução hospedada ainda depende do primeiro push para o repositório que será criado pelo aluno.
+No primeiro push público, a CI detectou `ERR_PNPM_TARBALL_INTEGRITY`: os pacotes eram reconstruídos e republicados com o mesmo número de versão, mas seus bytes não coincidiam com os checksums do lockfile. O pnpm recusou corretamente o conteúdo. A correção passou a publicar os tarballs imutáveis preservados, em vez de remontar versões existentes.
 
 ## Erros comuns
 

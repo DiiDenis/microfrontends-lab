@@ -2090,6 +2090,22 @@ infra/verdaccio/seed/ui-react-1.0.0 → fotografia histórica
 packages/ui-react                   → código atual 1.1.0
 ```
 
+Depois do primeiro push público, aprendemos uma precisão adicional: não basta preservar apenas a versão histórica. Todos os pacotes que já foram publicados precisam manter os mesmos bytes associados ao mesmo número de versão. A CI remontou os pacotes e o pnpm encontrou checksums diferentes no lockfile:
+
+```text
+mesmo nome + mesma versão + bytes diferentes
+                    ↓
+ERR_PNPM_TARBALL_INTEGRITY
+```
+
+O bloqueio estava correto. A solução não foi ignorar a integridade nem atualizar checksums automaticamente. Guardamos em `infra/verdaccio/seed/tarballs` os cinco artifacts exatos e o publicador passou a enviar esses arquivos ao Verdaccio efêmero.
+
+```text
+fonte atual → build e testes
+tarball já publicado → seed imutável do registry
+mudou o conteúdo → nova versão e novo tarball
+```
+
 Frase de entrevista:
 
 > Um registry efêmero precisa ser semeado com todas as versões históricas exigidas pelo lockfile; caso contrário, a CI limpa não reproduz o estado que um registry persistente fornece em produção.
