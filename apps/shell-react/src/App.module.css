@@ -2,6 +2,10 @@
   min-height: 100vh;
 }
 
+.title {
+  margin-bottom: var(--mfe-space-2);
+}
+
 .header {
   align-items: center;
   background: var(--mfe-color-surface-muted);

@@ -36,13 +36,13 @@ export function ProductApp() {
   }
 
   return (
-    <main className={styles.app}>
+    <main className={styles.app} data-mfe-owner="products-react">
       <div className={styles.ownership}>
         <AppBoundaryLabel label="PRODUCTS · REACT · STANDALONE" />
         <small>Design tokens: {DESIGN_TOKENS_VERSION}</small>
         <small>UI React: {UI_REACT_VERSION}</small>
       </div>
-      <h1>Produtos</h1>
+      <h1 className={styles.title}>Produtos</h1>
       <p>Remote version: {PRODUCTS_REMOTE_VERSION}</p>
       <p>Itens adicionados: {addedItems}</p>
 

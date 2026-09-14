@@ -28,7 +28,7 @@ registerLabStatusChip();
 function HomePage() {
   return (
     <section>
-      <h1>Home</h1>
+      <h1 className={styles.title}>Home</h1>
       <p>Esta página pertence ao shell.</p>
     </section>
   );
@@ -67,7 +67,7 @@ export function App() {
   }, []);
 
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} data-mfe-owner="shell-react">
       <header className={styles.header}>
         <div className={styles.ownership}>
           <AppBoundaryLabel label="SHELL · REACT" />

@@ -45,7 +45,7 @@ function toggleRole() {
 </script>
 
 <template>
-  <main class="account">
+  <main class="account" data-mfe-owner="account-vue">
     <div class="ownership">
       <span class="owner">ACCOUNT · VUE · STANDALONE</span>
       <small>Design tokens: {{ DESIGN_TOKENS_VERSION }}</small>
@@ -54,7 +54,7 @@ function toggleRole() {
         status="warning"
       />
     </div>
-    <h1>Minha conta</h1>
+    <h1 class="title">Minha conta</h1>
     <p>Remote version: {{ ACCOUNT_REMOTE_VERSION }}</p>
     <p>Origem: {{ source }}</p>
 
@@ -76,10 +76,13 @@ function toggleRole() {
 <style scoped>
 .account {
   color: var(--mfe-color-text);
-  font-family: var(--mfe-font-family);
   margin: 0 auto;
   max-width: 40rem;
   padding: var(--mfe-space-4);
+}
+
+.title {
+  margin-bottom: var(--mfe-space-2);
 }
 
 .ownership {

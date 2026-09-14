@@ -1,9 +1,12 @@
 .app {
   color: var(--mfe-color-text);
-  font-family: var(--mfe-font-family);
   margin: 0 auto;
   max-width: 48rem;
   padding: var(--mfe-space-4);
+}
+
+.title {
+  margin-bottom: var(--mfe-space-2);
 }
 
 .ownership {

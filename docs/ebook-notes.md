@@ -1235,3 +1235,78 @@ Usar isso para ensinar que observabilidade não é somente registrar erros; tamb
 Frase para entrevista:
 
 > Eu isolo loading, falha de import e falha de renderização ou montagem na fronteira de cada remote. O fallback pertence ao host, o cleanup respeita o lifecycle do framework remoto, e Retry, cache e logs são tratados como decisões operacionais, não apenas visuais.
+
+## 27. Três apartamentos no mesmo terreno: isolamento de CSS
+
+Começar pelo resultado real do experimento:
+
+```text
+antes de abrir Products
+Home → 32px, cor normal
+
+Products carrega uma regra global .title
+
+depois de voltar para Home
+Home → 48px, vermelho
+```
+
+Analogia humana:
+
+> Module Federation trouxe três apartamentos para o mesmo terreno, mas o CSS global é como um alto-falante no pátio: qualquer regra anunciada ali pode ser ouvida por todos. Estar em outro projeto ou outro deploy não cria paredes CSS.
+
+Mostrar as três soluções lado a lado:
+
+```text
+CSS Modules
+.title → classe renomeada no build
+boa escolha para Shell e Products React
+
+Vue scoped
+.title → .title[data-v-xyz]
+seletor reescrito, mas ainda no mesmo DOM
+
+Shadow DOM
+.chip vive em outra árvore de estilos
+barreira estrutural do Web Component
+```
+
+Destacar que nenhuma é “isolamento mágico”:
+
+- CSS Modules não bloqueia herança, `body`, `:root` ou regras globais explícitas;
+- Vue scoped ainda pode ser atingido por CSS global externo e possui `:deep`/`:global`;
+- Shadow DOM ainda recebe custom properties, fontes e outras propriedades herdáveis pelo host.
+
+### Ownership visível
+
+Incluir uma ilustração do DOM:
+
+```html
+<div data-mfe-owner="shell-react">
+  <main data-mfe-owner="products-react">...</main>
+  <main data-mfe-owner="account-vue">...</main>
+</div>
+```
+
+Na execução real as rotas mostram um remote por vez, mas a imagem ajuda a ensinar a hierarquia de ownership. O atributo serve para debug; ele não cria isolamento sozinho.
+
+### Quem manda no body
+
+Frase curta:
+
+> O Shell é dono do documento, do `body`, do reset e da fonte global. Os remotes herdam o ambiente e estilizam somente suas fronteiras.
+
+Design tokens permanecem globais por intenção. Isso permite consistência entre CSS Modules, scoped e Shadow DOM, mas versões divergentes ainda podem disputar o mesmo nome pela cascata.
+
+### Quando uma classe global é necessária
+
+Usar namespace explícito, como a biblioteca:
+
+```css
+.mfe-lab-ui-button { ... }
+```
+
+Explicar que prefixo reduz probabilidade de colisão, mas continua sendo convenção. A regra mais segura é manter estilos de feature locais e reservar o global para contratos deliberados.
+
+Frase para entrevista:
+
+> Module Federation compõe módulos, não cria uma sandbox de CSS. Eu escolho isolamento no producer, mantenho o body no host, uso tokens globais por contrato e torno as fronteiras observáveis no DOM.
