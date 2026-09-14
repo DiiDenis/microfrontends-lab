@@ -42,7 +42,7 @@ export function ProductApp() {
         <small>UI React: {UI_REACT_VERSION}</small>
       </div>
       <h1>Produtos</h1>
-      <p>Remote version: products-v2</p>
+      <p>Remote version: products-v3</p>
       <p>Itens adicionados: {addedItems}</p>
 
       <ul className={styles.productList}>
@@ -52,7 +52,7 @@ export function ProductApp() {
               <h2 className={styles.productName}>{product.name}</h2>
               <p>{product.price}</p>
             </div>
-            <LabButton onClick={addItem}>
+            <LabButton onClick={addItem} size="compact">
               Adicionar
             </LabButton>
           </li>

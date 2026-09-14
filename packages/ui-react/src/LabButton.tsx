@@ -5,6 +5,7 @@ export interface LabButtonProps {
   className?: string;
   disabled?: boolean;
   onClick?: MouseEventHandler<HTMLButtonElement>;
+  size?: 'default' | 'compact';
   type?: 'button' | 'reset' | 'submit';
 }
 
@@ -13,15 +14,18 @@ export function LabButton({
   className,
   disabled = false,
   onClick,
+  size = 'default',
   type = 'button',
 }: LabButtonProps) {
-  const buttonClassName = className
-    ? `mfe-lab-ui-button ${className}`
-    : 'mfe-lab-ui-button';
+  const buttonClassNames = [
+    'mfe-lab-ui-button',
+    size === 'compact' ? 'mfe-lab-ui-button--compact' : '',
+    className,
+  ].filter(Boolean);
 
   return (
     <button
-      className={buttonClassName}
+      className={buttonClassNames.join(' ')}
       disabled={disabled}
       onClick={onClick}
       type={type}

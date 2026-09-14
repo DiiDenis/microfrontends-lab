@@ -20,6 +20,10 @@
   opacity: 0.6;
 }
 
+.mfe-lab-ui-button--compact {
+  padding: var(--mfe-space-1) var(--mfe-space-2);
+}
+
 .mfe-lab-ui-boundary-label {
   color: var(--mfe-color-accent);
   font-weight: 700;

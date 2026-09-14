@@ -22,10 +22,12 @@ Os três apps possuem servidores e builds próprios. Products é composto como c
 | --- | --- | --- |
 | `@mfe-lab/contracts` | Verdaccio, `1.0.0` | Tipos e nomes de eventos framework-agnostic |
 | `@mfe-lab/design-tokens` | Verdaccio, `1.0.0` | Variáveis CSS e versão da base visual compartilhada |
-| `@mfe-lab/ui-react` | Verdaccio, `1.0.0` | `LabButton` e `AppBoundaryLabel` para os consumidores React |
+| `@mfe-lab/ui-react` | Verdaccio, Shell `1.0.0` / Products `1.1.0` | `LabButton` e `AppBoundaryLabel` para os consumidores React |
 | `@mfe-lab/ui-web` | Verdaccio, `1.0.0` | `<lab-status-chip>` nativo para consumidores React e Vue |
 
 Os quatro pacotes são publicados no registry npm local e resolvidos durante instalação e build; nenhum deles é um remote de Module Federation. `contracts` não contém estado nem depende de React, Vue ou DOM. `design-tokens` contém valores visuais globais, `ui-react` contém somente componentes React e `ui-web` demonstra um Custom Element controlado pelo navegador. Account Vue continua sem consumir `ui-react`, mas pode usar o componente neutro de `ui-web`.
+
+O Verdaccio possui `ui-react@1.0.0` e `ui-react@1.1.0`. Products adotou `1.1.0` e usa o botão compacto; o shell permanece propositalmente em `1.0.0` para demonstrar que publicar uma biblioteca não atualiza consumidores automaticamente. Products também está em `products-v3`, carregado pelo shell em runtime sem rebuild do host.
 
 ## Registry npm local
 

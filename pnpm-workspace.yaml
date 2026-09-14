@@ -25,5 +25,5 @@ minimumReleaseAgeExclude:
   - '@rspack/core@2.1.10'
   - '@mfe-lab/contracts@1.0.0'
   - '@mfe-lab/design-tokens@1.0.0'
-  - '@mfe-lab/ui-react@1.0.0'
+  - '@mfe-lab/ui-react@1.0.0 || 1.1.0'
   - '@mfe-lab/ui-web@1.0.0'

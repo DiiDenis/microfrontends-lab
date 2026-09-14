@@ -1039,3 +1039,55 @@ subir Verdaccio
 O pnpm 11 normalmente verifica e instala dependências antes de rodar scripts. Para não deixar essa conveniência tentar instalar os apps cedo demais, o laboratório define `verifyDepsBeforeRun: false` e deixa o próprio bootstrap controlar a sequência. Isso não desliga a validação do lockfile nos comandos `install --frozen-lockfile`; apenas remove a instalação implícita anterior ao script.
 
 O nome do container deve aparecer nas ilustrações e troubleshooting: `microfrontends-lab-verdaccio`. Isso ajuda o leitor a reconhecer que aquele container é a prateleira local de pacotes do laboratório, não um servidor do Shell.
+
+## 24. A comparação central: caixa versionada versus restaurante ao vivo
+
+Usar a etapa 17 como o capítulo que une tudo. Começar com uma única tela mostrando versões diferentes:
+
+```text
+SHELL · UI React 1.0.0
+└── PRODUCTS · UI React 1.1.0 · products-v3
+```
+
+Analogia humana:
+
+> Uma biblioteca npm é um ingrediente embalado que o restaurante comprou antes de abrir. Um remote é um balcão parceiro servindo parte do pedido enquanto o cliente está no salão.
+
+Para a biblioteca:
+
+```text
+ui-react@1.1.0 foi colocado na prateleira
+≠
+todos os apps trocaram automaticamente sua caixa 1.0.0
+```
+
+Publicar apenas disponibiliza. Cada consumidor escolhe quando adotar, atualiza seu `package.json`, instala, builda e faz deploy. Por isso Shell pôde permanecer em `1.0.0` enquanto Products adotou `1.1.0`.
+
+Para o remote:
+
+```text
+Shell buildado conhece a placa:
+http://localhost:3001/mf-manifest.json
+
+Products troca os pratos/chunks atrás da mesma placa
+→ no próximo carregamento, Shell encontra products-v3
+```
+
+Destacar o trade-off sem vender uma solução como universalmente superior:
+
+```text
+Pacote npm
++ versão e rollback explícitos
++ falha do registry não afeta usuário após deploy
+- adoção exige rebuild/redeploy do consumidor
+
+Module Federation
++ remote atualiza sem rebuild do host
++ autonomia de release do domínio
+- disponibilidade e contrato importam em runtime
+- cache e observabilidade ficam mais importantes
+```
+
+Frase para entrevista:
+
+> Publicação não é adoção. Um pacote novo só chega após o consumidor atualizar e rebuildar; um remote novo pode chegar no próximo carregamento pela mesma URL, desde que o contrato continue compatível.

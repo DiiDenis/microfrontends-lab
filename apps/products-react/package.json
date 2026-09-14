@@ -12,7 +12,7 @@
   "dependencies": {
     "@mfe-lab/contracts": "1.0.0",
     "@mfe-lab/design-tokens": "1.0.0",
-    "@mfe-lab/ui-react": "1.0.0",
+    "@mfe-lab/ui-react": "1.1.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

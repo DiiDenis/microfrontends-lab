@@ -48,8 +48,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       '@mfe-lab/ui-react':
-        specifier: 1.0.0
-        version: 1.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 1.1.0
+        version: 1.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -278,6 +278,12 @@ packages:
 
   '@mfe-lab/ui-react@1.0.0':
     resolution: {integrity: sha512-j9mevml8qjXrXjpW1Gi474lZWfnehJcrUV1Ndfr86zpAHcYBtWEeTfnGi4dKsa7RxvY0Ad4ItTbGziGE/7MO0g==}
+    peerDependencies:
+      react: '>=19.0.0 <20'
+      react-dom: '>=19.0.0 <20'
+
+  '@mfe-lab/ui-react@1.1.0':
+    resolution: {integrity: sha512-rY3bMiU6bX8ZeDI9U6anUxFPl4x5k8hjG+9IaSTnNYYjyGd9rCcB8HtMfs0R5ZoiJXt/Yblf02t9n28+0MNGTA==}
     peerDependencies:
       react: '>=19.0.0 <20'
       react-dom: '>=19.0.0 <20'
@@ -1048,6 +1054,12 @@ snapshots:
   '@mfe-lab/design-tokens@1.0.0': {}
 
   '@mfe-lab/ui-react@1.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@mfe-lab/design-tokens': 1.0.0
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+
+  '@mfe-lab/ui-react@1.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@mfe-lab/design-tokens': 1.0.0
       react: 19.2.8
