@@ -102,3 +102,5 @@ Account continua abrindo como SPA independente e publica um contrato neutro de `
 O shell registra `products` pelo manifest `http://localhost:3001/mf-manifest.json` e carrega `products/ProductApp` somente ao acessar `/products`. Para apontar um build a outro ambiente, defina `PRODUCTS_REMOTE_URL`; sem essa variável, o fallback local permanece explícito.
 
 O shell também registra `account` pelo manifest `http://localhost:3002/mf-manifest.json`. `ACCOUNT_REMOTE_URL` permite configurar outra origem; o fallback local permanece explícito. Como Account é Vue, o shell não renderiza seu componente diretamente: cria um container e chama `account/mount`.
+
+Em desenvolvimento, o Shell mostra um painel recolhível `Diagnóstico técnico dos micro frontends`. Ele importa módulos públicos pequenos dos dois remotes e apresenta versões de frameworks, remotes, `ui-react`, os endereços efetivos dos manifests e se Products reutiliza a mesma instância de React observada pelo Shell. O painel não lê globals internos do Module Federation e não é incluído na interface de produção.

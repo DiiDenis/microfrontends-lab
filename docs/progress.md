@@ -19,3 +19,4 @@
 | 15 | Criar Web Component compartilhado entre React e Vue | Concluída |
 | 16 | Publicar pacotes reais em registry npm local | Concluída |
 | 17 | Comparar atualização por Module Federation e pacote npm | Concluída |
+| 18 | Tornar dependências compartilhadas visíveis | Concluída |

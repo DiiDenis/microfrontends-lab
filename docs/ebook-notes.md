@@ -1091,3 +1091,71 @@ Module Federation
 Frase para entrevista:
 
 > Publicação não é adoção. Um pacote novo só chega após o consumidor atualizar e rebuildar; um remote novo pode chegar no próximo carregamento pela mesma URL, desde que o contrato continue compatível.
+
+## 25. A mesa de negociação do `shared`
+
+Usar a analogia de uma sala com uma mesa chamada `default`:
+
+```text
+Share scope "default"
+├── Shell oferece React 19.2.8
+├── Products oferece React 19.2.8
+├── ambos pedem singleton
+└── runtime escolhe a instância reutilizada
+```
+
+Frase humana:
+
+> `shared` não envia a feature de um app para outro; ele cria uma mesa onde os containers negociam quem fornece uma dependência comum.
+
+Explicar os três conceitos separadamente:
+
+```text
+shared          → esta dependência participa da mesa
+singleton       → queremos uma única instância nesse escopo
+requiredVersion → esta é a versão que meu código espera
+```
+
+Destacar que singleton não significa “sempre vai funcionar”. Se todos forem obrigados a usar uma única ferramenta incompatível, continua existindo problema; apenas não existem duas ferramentas.
+
+### Subpaths também entram pela porta
+
+Mostrar imports reais:
+
+```ts
+import { jsx } from 'react/jsx-runtime';
+import { createRoot } from 'react-dom/client';
+```
+
+Compartilhar apenas os nomes raiz não deve esconder que subpaths são módulos solicitados separadamente. A configuração com `react/` e `react-dom/` intercepta a família de imports e o manifest mostra as chaves finais negociadas.
+
+### Por que UI React continua fora
+
+Retomar a tela da etapa anterior:
+
+```text
+Shell    → ui-react 1.0.0
+Products → ui-react 1.1.0
+```
+
+Essa diferença é intencional e saudável para o experimento. Colocar `ui-react` em `shared` poderia fazer o runtime escolher uma versão para ambos, mudando o código efetivamente testado por uma equipe. Compartilhar tudo economiza bytes às custas de autonomia e previsibilidade.
+
+### Painel por contrato, não por espionagem
+
+O painel técnico importa `products/technicalInfo` e `account/technicalInfo`, exposes públicos pequenos. Não acessa globals ou caches privados do Module Federation. Usar a analogia de cada time entregar um crachá com suas informações, em vez de o Shell vasculhar a mochila interna dos remotes.
+
+Mostrar o painel apenas em desenvolvimento e registrar suas linhas como uma ilustração futura:
+
+```text
+React Shell ............. 19.2.8
+React Products .......... 19.2.8
+Products usa React Shell  sim
+Vue Account ............. 3.5.42
+Remote Products ......... products-v3
+Remote Account .......... account-v1
+UI React Shell .......... 1.0.0
+UI React Products ....... 1.1.0
+Manifests ............... :3001 / :3002
+```
+
+Explicar que duas versões iguais na tela ainda poderiam vir de duas cópias distintas. Para tornar a reutilização concreta sem ler internals, Products entrega uma referência pública a `useState` e o Shell a compara com a sua usando `===`. O resultado `sim` significa que ambas as fronteiras receberam a mesma identidade de função naquela execução.

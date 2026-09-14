@@ -23,7 +23,15 @@ export default defineConfig({
           singleton: true,
           requiredVersion: '19.2.8',
         },
+        'react/': {
+          singleton: true,
+          requiredVersion: '19.2.8',
+        },
         'react-dom': {
+          singleton: true,
+          requiredVersion: '19.2.8',
+        },
+        'react-dom/': {
           singleton: true,
           requiredVersion: '19.2.8',
         },
@@ -42,6 +50,12 @@ export default defineConfig({
     },
     htmlFallback: false,
     port: 3000,
+  },
+  source: {
+    define: {
+      __ACCOUNT_REMOTE_URL__: JSON.stringify(accountRemoteUrl),
+      __PRODUCTS_REMOTE_URL__: JSON.stringify(productsRemoteUrl),
+    },
   },
   html: {
     title: 'Micro Frontends Lab',

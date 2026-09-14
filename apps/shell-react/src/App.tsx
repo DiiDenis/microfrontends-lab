@@ -19,6 +19,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
 import { RemoteRouteErrorBoundary } from './RemoteRouteErrorBoundary';
+import { TechnicalPanel } from './TechnicalPanel';
 import { VueRemoteRoute } from './VueRemoteRoute';
 import styles from './App.module.css';
 
@@ -113,6 +114,8 @@ export function App() {
           </span>
         </div>
       </header>
+
+      {import.meta.env.DEV && <TechnicalPanel />}
 
       <main className={styles.content}>
         <Routes>

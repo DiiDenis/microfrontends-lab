@@ -16,6 +16,7 @@ export default defineConfig({
       filename: 'remoteEntry.js',
       exposes: {
         './mount': './src/mount.ts',
+        './technicalInfo': './src/technicalInfo.ts',
       },
       manifest: true,
       shared: {

@@ -33,3 +33,30 @@
 .content {
   padding: var(--mfe-space-4);
 }
+
+.technicalPanel {
+  background: var(--mfe-color-surface-muted);
+  border-bottom: 1px solid var(--mfe-color-border);
+  padding: var(--mfe-space-2) var(--mfe-space-4);
+}
+
+.technicalPanel summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.technicalDetails {
+  display: grid;
+  gap: var(--mfe-space-1) var(--mfe-space-3);
+  grid-template-columns: max-content minmax(0, 1fr);
+  margin-bottom: 0;
+}
+
+.technicalDetails dt {
+  font-weight: 700;
+}
+
+.technicalDetails dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

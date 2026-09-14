@@ -10,6 +10,7 @@ export default defineConfig({
       filename: 'remoteEntry.js',
       exposes: {
         './ProductApp': './src/ProductApp.tsx',
+        './technicalInfo': './src/technicalInfo.ts',
       },
       manifest: true,
       shared: {
@@ -17,7 +18,15 @@ export default defineConfig({
           singleton: true,
           requiredVersion: '19.2.8',
         },
+        'react/': {
+          singleton: true,
+          requiredVersion: '19.2.8',
+        },
         'react-dom': {
+          singleton: true,
+          requiredVersion: '19.2.8',
+        },
+        'react-dom/': {
           singleton: true,
           requiredVersion: '19.2.8',
         },

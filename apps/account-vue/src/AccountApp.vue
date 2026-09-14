@@ -12,6 +12,8 @@ import {
 } from '@mfe-lab/ui-web';
 import { ref, watch } from 'vue';
 
+import { ACCOUNT_REMOTE_VERSION } from './technicalInfo';
+
 registerLabStatusChip();
 
 const props = defineProps<{
@@ -53,7 +55,7 @@ function toggleRole() {
       />
     </div>
     <h1>Minha conta</h1>
-    <p>Remote version: account-v1</p>
+    <p>Remote version: {{ ACCOUNT_REMOTE_VERSION }}</p>
     <p>Origem: {{ source }}</p>
 
     <dl class="details">

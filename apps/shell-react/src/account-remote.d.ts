@@ -9,3 +9,11 @@ declare module 'account/mount' {
     options: AccountMountOptions,
   ): AccountMountHandle;
 }
+
+declare module 'account/technicalInfo' {
+  export const ACCOUNT_TECHNICAL_INFO: {
+    readonly framework: 'Vue';
+    readonly frameworkVersion: string;
+    readonly remoteVersion: string;
+  };
+}

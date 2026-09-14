@@ -13,6 +13,7 @@ import '@mfe-lab/ui-react/styles.css';
 import { useEffect, useState } from 'react';
 
 import styles from './ProductApp.module.css';
+import { PRODUCTS_REMOTE_VERSION } from './technicalInfo';
 
 const products = [
   { name: 'Teclado mecânico', price: 'R$ 349,90' },
@@ -42,7 +43,7 @@ export function ProductApp() {
         <small>UI React: {UI_REACT_VERSION}</small>
       </div>
       <h1>Produtos</h1>
-      <p>Remote version: products-v3</p>
+      <p>Remote version: {PRODUCTS_REMOTE_VERSION}</p>
       <p>Itens adicionados: {addedItems}</p>
 
       <ul className={styles.productList}>
