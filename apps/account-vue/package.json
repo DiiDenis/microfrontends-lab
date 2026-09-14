@@ -9,9 +9,9 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@mfe-lab/contracts": "workspace:*",
-    "@mfe-lab/design-tokens": "workspace:*",
-    "@mfe-lab/ui-web": "workspace:*",
+    "@mfe-lab/contracts": "1.0.0",
+    "@mfe-lab/design-tokens": "1.0.0",
+    "@mfe-lab/ui-web": "1.0.0",
     "vue": "3.5.42"
   },
   "devDependencies": {

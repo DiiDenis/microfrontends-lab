@@ -2,6 +2,9 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+linkWorkspacePackages: false
+verifyDepsBeforeRun: false
+
 minimumReleaseAgeExclude:
   - '@rsbuild/core@2.1.13'
   - '@rspack/binding-darwin-arm64@2.1.10'
@@ -20,3 +23,7 @@ minimumReleaseAgeExclude:
   - '@rspack/binding-win32-x64-msvc@2.1.10'
   - '@rspack/binding@2.1.10'
   - '@rspack/core@2.1.10'
+  - '@mfe-lab/contracts@1.0.0'
+  - '@mfe-lab/design-tokens@1.0.0'
+  - '@mfe-lab/ui-react@1.0.0'
+  - '@mfe-lab/ui-web@1.0.0'

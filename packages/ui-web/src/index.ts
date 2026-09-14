@@ -5,4 +5,4 @@ export {
 } from './LabStatusChip';
 export type { LabStatus } from './LabStatusChip';
 
-export const UI_WEB_VERSION = '1.0.0-lab';
+export const UI_WEB_VERSION = '1.0.0';

@@ -1,7 +1,6 @@
 {
   "name": "@mfe-lab/ui-web",
-  "version": "0.0.0",
-  "private": true,
+  "version": "1.0.0",
   "type": "module",
   "files": [
     "dist"
@@ -18,6 +17,10 @@
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js"
     }
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "http://127.0.0.1:4873/"
   },
   "scripts": {
     "build": "rslib build",

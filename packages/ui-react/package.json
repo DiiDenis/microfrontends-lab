@@ -1,7 +1,6 @@
 {
   "name": "@mfe-lab/ui-react",
-  "version": "0.0.0",
-  "private": true,
+  "version": "1.0.0",
   "type": "module",
   "sideEffects": [
     "**/*.css"
@@ -18,6 +17,10 @@
       "import": "./dist/index.js"
     },
     "./styles.css": "./dist/index.css"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "http://127.0.0.1:4873/"
   },
   "scripts": {
     "build": "rslib build",

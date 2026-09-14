@@ -11,14 +11,14 @@ importers:
   apps/account-vue:
     dependencies:
       '@mfe-lab/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
+        specifier: 1.0.0
+        version: 1.0.0
       '@mfe-lab/design-tokens':
-        specifier: workspace:*
-        version: link:../../packages/design-tokens
+        specifier: 1.0.0
+        version: 1.0.0
       '@mfe-lab/ui-web':
-        specifier: workspace:*
-        version: link:../../packages/ui-web
+        specifier: 1.0.0
+        version: 1.0.0
       vue:
         specifier: 3.5.42
         version: 3.5.42(typescript@6.0.3)
@@ -42,14 +42,14 @@ importers:
   apps/products-react:
     dependencies:
       '@mfe-lab/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
+        specifier: 1.0.0
+        version: 1.0.0
       '@mfe-lab/design-tokens':
-        specifier: workspace:*
-        version: link:../../packages/design-tokens
+        specifier: 1.0.0
+        version: 1.0.0
       '@mfe-lab/ui-react':
-        specifier: workspace:*
-        version: link:../../packages/ui-react
+        specifier: 1.0.0
+        version: 1.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -79,17 +79,17 @@ importers:
   apps/shell-react:
     dependencies:
       '@mfe-lab/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
+        specifier: 1.0.0
+        version: 1.0.0
       '@mfe-lab/design-tokens':
-        specifier: workspace:*
-        version: link:../../packages/design-tokens
+        specifier: 1.0.0
+        version: 1.0.0
       '@mfe-lab/ui-react':
-        specifier: workspace:*
-        version: link:../../packages/ui-react
+        specifier: 1.0.0
+        version: 1.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@mfe-lab/ui-web':
-        specifier: workspace:*
-        version: link:../../packages/ui-web
+        specifier: 1.0.0
+        version: 1.0.0
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -269,6 +269,21 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.6.0':
     resolution: {integrity: sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==}
+
+  '@mfe-lab/contracts@1.0.0':
+    resolution: {integrity: sha512-PUHeQVE/hRIRLNt8YCozLyYce0LCcPx3x3+GQEaVq4fCsRcTgtG8ZZNLtdOVXCubuvLLYtck8Ye+t+D00VN8YA==}
+
+  '@mfe-lab/design-tokens@1.0.0':
+    resolution: {integrity: sha512-tb76Zh9HbLV+kDSdpRhhp4UyUqmwv2RwB1TI40o1vLwytnijiQDj5GdzHQDbH376/Ryko8dAFcen7ofyrVYnag==}
+
+  '@mfe-lab/ui-react@1.0.0':
+    resolution: {integrity: sha512-j9mevml8qjXrXjpW1Gi474lZWfnehJcrUV1Ndfr86zpAHcYBtWEeTfnGi4dKsa7RxvY0Ad4ItTbGziGE/7MO0g==}
+    peerDependencies:
+      react: '>=19.0.0 <20'
+      react-dom: '>=19.0.0 <20'
+
+  '@mfe-lab/ui-web@1.0.0':
+    resolution: {integrity: sha512-c+j76AuPqja9lcXf86O7CCb0acdI3W5EhmQzaxv/FQEnzI0NXQLVu+Sd5EQghxfb/tFgcHo7Jv2kumf3CyQpjw==}
 
   '@module-federation/bridge-react-webpack-plugin@2.9.0':
     resolution: {integrity: sha512-hv3fuQkGERQ/COBKTVbFV1GWovReSg/bzJzDuxWR1F84h6NYtbYMWQqX8Egvb7HKMtn9Rflzw0GeaLr8F08vDg==}
@@ -1027,6 +1042,18 @@ snapshots:
     optional: true
 
   '@jridgewell/sourcemap-codec@1.6.0': {}
+
+  '@mfe-lab/contracts@1.0.0': {}
+
+  '@mfe-lab/design-tokens@1.0.0': {}
+
+  '@mfe-lab/ui-react@1.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@mfe-lab/design-tokens': 1.0.0
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+
+  '@mfe-lab/ui-web@1.0.0': {}
 
   '@module-federation/bridge-react-webpack-plugin@2.9.0':
     dependencies:

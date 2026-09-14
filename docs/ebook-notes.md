@@ -945,3 +945,97 @@ Custom Element nativo
 O laboratório evita Lit de propósito para revelar as primitivas da plataforma. Web Components são usados em design systems, widgets, integrações entre frameworks e migrações, mas componentes complexos frequentemente usam Lit, Stencil, FAST ou wrappers específicos para reduzir boilerplate e melhorar a experiência de desenvolvimento.
 
 Evitar prometer que “funciona para tudo”. A tag atravessa frameworks, mas formulários, SSR, eventos complexos, objetos e ergonomia de cada framework ainda podem exigir adapters.
+
+## 23. Do `workspace:*` ao pacote publicado
+
+Abrir com a continuação direta da analogia dos três projetos:
+
+```text
+Antes
+Shell ── link local ──> packages/ui-react/src/dist
+
+Agora
+packages/ui-react
+  ── build ──> dist
+  ── pack ───> ui-react-1.0.0.tgz
+  ── publish ─> Verdaccio
+  ── install ─> Shell
+```
+
+Frase humana para memorizar:
+
+> `workspace:*` é pegar a ferramenta diretamente na oficina ao lado. Publicar é embalar uma versão, colocá-la no estoque com etiqueta e fazer o app pedir exatamente aquela caixa.
+
+Explicar que o Verdaccio não hospeda os micro frontends. Ele guarda pacotes usados no install/build. Quem hospeda o código federado em runtime continua sendo o servidor de cada remote, por meio de manifest, remote entry e chunks.
+
+```text
+Verdaccio / npm privado
+→ distribui contracts, tokens e componentes
+→ entra antes do build do consumidor
+
+Module Federation
+→ distribui ProductApp e account/mount
+→ entra no navegador, em runtime
+```
+
+### O mesmo repositório não significa a mesma fonte
+
+Mostrar que `packages/ui-react/src` pode continuar ao lado do Shell no monorepo, mas `linkWorkspacePackages: false` e a dependência exata `1.0.0` evitam o atalho local:
+
+```text
+apps/shell-react/package.json
+└── @mfe-lab/ui-react: 1.0.0
+        ↓ .npmrc escolhe registry por escopo
+http://127.0.0.1:4873
+        ↓ baixa tarball
+node_modules/.pnpm/@mfe-lab+ui-react@1.0.0...
+```
+
+Editar a fonte local não muda o app. É necessário gerar uma nova versão, publicar, instalar e rebuildar o consumidor. Isso cria uma fronteira parecida com a de repositórios separados sem perder a conveniência do monorepo.
+
+### O que foi realmente publicado
+
+O registry recebe um `.tgz` contendo `package.json` e os arquivos permitidos de `dist`; não recebe magicamente todo o projeto. `pnpm pack --dry-run` permite abrir a lista da caixa antes do envio.
+
+Destacar também a conversão do protocolo interno:
+
+```text
+fonte de ui-react:       design-tokens = workspace:*
+manifest no tarball:     design-tokens = 1.0.0
+```
+
+O primeiro é uma garantia de desenvolvimento no workspace. O segundo é uma dependência compreensível por qualquer consumidor do registry.
+
+### O lockfile como comprovante
+
+Comparar visualmente:
+
+```yaml
+# antes: fonte ligada
+specifier: workspace:*
+version: link:../../packages/ui-react
+
+# depois: artefato versionado
+specifier: 1.0.0
+version: 1.0.0
+```
+
+O lockfile registra a decisão reprodutível e a integridade do conteúdo. O metadata do Verdaccio mostra ainda a URL do tarball. `pnpm why` responde qual consumidor pediu aquela versão.
+
+### Por que existe `bootstrap:local`
+
+Num registry vazio, os apps pedem pacotes que ainda não foram publicados. Portanto, o fluxo limpo precisa respeitar a ordem:
+
+```text
+subir Verdaccio
+→ instalar toolchain apenas dos pacotes
+→ buildar
+→ inspecionar tarballs
+→ publicar dependências em ordem
+→ instalar os apps
+→ executar checks
+```
+
+O pnpm 11 normalmente verifica e instala dependências antes de rodar scripts. Para não deixar essa conveniência tentar instalar os apps cedo demais, o laboratório define `verifyDepsBeforeRun: false` e deixa o próprio bootstrap controlar a sequência. Isso não desliga a validação do lockfile nos comandos `install --frozen-lockfile`; apenas remove a instalação implícita anterior ao script.
+
+O nome do container deve aparecer nas ilustrações e troubleshooting: `microfrontends-lab-verdaccio`. Isso ajuda o leitor a reconhecer que aquele container é a prateleira local de pacotes do laboratório, não um servidor do Shell.

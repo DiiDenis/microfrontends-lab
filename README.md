@@ -20,12 +20,34 @@ Os três apps possuem servidores e builds próprios. Products é composto como c
 
 | Pacote | Resolução atual | Responsabilidade |
 | --- | --- | --- |
-| `@mfe-lab/contracts` | `workspace:*` | Tipos e nomes de eventos framework-agnostic |
-| `@mfe-lab/design-tokens` | `workspace:*` | Variáveis CSS e versão da base visual compartilhada |
-| `@mfe-lab/ui-react` | `workspace:*` | `LabButton` e `AppBoundaryLabel` para os consumidores React |
-| `@mfe-lab/ui-web` | `workspace:*` | `<lab-status-chip>` nativo para consumidores React e Vue |
+| `@mfe-lab/contracts` | Verdaccio, `1.0.0` | Tipos e nomes de eventos framework-agnostic |
+| `@mfe-lab/design-tokens` | Verdaccio, `1.0.0` | Variáveis CSS e versão da base visual compartilhada |
+| `@mfe-lab/ui-react` | Verdaccio, `1.0.0` | `LabButton` e `AppBoundaryLabel` para os consumidores React |
+| `@mfe-lab/ui-web` | Verdaccio, `1.0.0` | `<lab-status-chip>` nativo para consumidores React e Vue |
 
-Os quatro pacotes são resolvidos durante instalação e build; nenhum deles é um remote de Module Federation. `contracts` não contém estado nem depende de React, Vue ou DOM. `design-tokens` contém valores visuais globais, `ui-react` contém somente componentes React e `ui-web` demonstra um Custom Element controlado pelo navegador. Account Vue continua sem consumir `ui-react`, mas pode usar o componente neutro de `ui-web`.
+Os quatro pacotes são publicados no registry npm local e resolvidos durante instalação e build; nenhum deles é um remote de Module Federation. `contracts` não contém estado nem depende de React, Vue ou DOM. `design-tokens` contém valores visuais globais, `ui-react` contém somente componentes React e `ui-web` demonstra um Custom Element controlado pelo navegador. Account Vue continua sem consumir `ui-react`, mas pode usar o componente neutro de `ui-web`.
+
+## Registry npm local
+
+O Verdaccio fica disponível apenas em `http://127.0.0.1:4873` e o container tem o nome didático `microfrontends-lab-verdaccio`. A configuração `.npmrc` envia somente pacotes `@mfe-lab` para ele; dependências públicas continuam usando `https://registry.npmjs.org/`.
+
+Em uma máquina ou clone limpo, o comando oficial é:
+
+```powershell
+pnpm run bootstrap:local
+```
+
+Ele sobe o registry, instala e compila o toolchain dos pacotes, verifica os tarballs, publica na ordem correta e só então instala os apps. Depois disso, use os comandos gerais normalmente.
+
+```powershell
+pnpm run registry:up
+pnpm run registry:down
+pnpm run packages:pack:check
+pnpm run packages:publish:local
+pnpm run apps:install:local-registry
+```
+
+Um `pnpm install` global feito antes do bootstrap tentará resolver as versões `1.0.0` dos apps em um registry ainda vazio. Por isso a ordem é parte do contrato de inicialização do laboratório.
 
 ## Comandos gerais
 
@@ -38,7 +60,7 @@ pnpm run check
 
 `pnpm run dev` inicia os três apps em paralelo. Os demais comandos executam as tarefas correspondentes em todos os apps existentes.
 
-Antes de iniciar, tipar ou buildar os apps, os scripts da raiz compilam `@mfe-lab/contracts`, `@mfe-lab/design-tokens`, `@mfe-lab/ui-react` e `@mfe-lab/ui-web`. Assim, JavaScript, declarações TypeScript e estilos estão disponíveis aos consumidores.
+Os scripts da raiz ainda compilam as fontes dos quatro pacotes para permitir evolução e publicação. Os apps, porém, resolvem as versões publicadas pelo Verdaccio; editar `packages/*/src` não altera silenciosamente o código já instalado nos apps.
 
 Para servir os builds de produção usados no experimento de deploy independente:
 
