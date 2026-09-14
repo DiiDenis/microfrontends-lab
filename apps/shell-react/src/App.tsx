@@ -10,6 +10,11 @@ import {
   UI_REACT_VERSION,
 } from '@mfe-lab/ui-react';
 import '@mfe-lab/ui-react/styles.css';
+import {
+  registerLabStatusChip,
+  UI_WEB_VERSION,
+} from '@mfe-lab/ui-web';
+import '@mfe-lab/ui-web/react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
@@ -18,6 +23,8 @@ import { VueRemoteRoute } from './VueRemoteRoute';
 import styles from './App.module.css';
 
 const ProductsRemoteModule = lazy(() => import('./ProductsRemoteModule'));
+
+registerLabStatusChip();
 
 function HomePage() {
   return (
@@ -77,6 +84,10 @@ export function App() {
           <AppBoundaryLabel label="SHELL · REACT" />
           <small>Design tokens: {DESIGN_TOKENS_VERSION}</small>
           <small>UI React: {UI_REACT_VERSION}</small>
+          <lab-status-chip
+            label={`UI Web: ${UI_WEB_VERSION}`}
+            status="success"
+          />
         </div>
 
         <nav aria-label="Navegação principal">

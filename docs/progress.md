@@ -16,3 +16,4 @@
 | 12 | Comunicar os micro frontends com Custom Events | Concluída |
 | 13 | Criar pacote compartilhado de design tokens | Concluída |
 | 14 | Criar biblioteca de UI React em build time | Concluída |
+| 15 | Criar Web Component compartilhado entre React e Vue | Concluída |

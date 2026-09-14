@@ -16,6 +16,9 @@ importers:
       '@mfe-lab/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
+      '@mfe-lab/ui-web':
+        specifier: workspace:*
+        version: link:../../packages/ui-web
       vue:
         specifier: 3.5.42
         version: 3.5.42(typescript@6.0.3)
@@ -84,6 +87,9 @@ importers:
       '@mfe-lab/ui-react':
         specifier: workspace:*
         version: link:../../packages/ui-react
+      '@mfe-lab/ui-web':
+        specifier: workspace:*
+        version: link:../../packages/ui-web
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -155,6 +161,18 @@ importers:
       react-dom:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/ui-web:
+    devDependencies:
+      '@rslib/core':
+        specifier: 0.23.2
+        version: 0.23.2(@module-federation/runtime-tools@2.9.0)(typescript@7.0.2)
+      '@types/react':
+        specifier: 19.2.18
+        version: 19.2.18
       typescript:
         specifier: 7.0.2
         version: 7.0.2

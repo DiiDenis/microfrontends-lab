@@ -832,3 +832,116 @@ git switch main
 ```
 
 Assim, o leitor poderá consultar e executar o estado com `workspace:*` pelo commit marcado, enquanto a linha principal evolui posteriormente para o Verdaccio.
+
+## 22. Web Component: uma tag neutra entre React e Vue
+
+Começar com o problema humano deixado pela biblioteca anterior:
+
+```text
+LabButton React
+├── Shell React usa
+├── Products React usa
+└── Account Vue não entende
+```
+
+Em seguida mostrar a alternativa desta etapa:
+
+```text
+<lab-status-chip>
+├── Shell React escreve a tag
+├── Account Vue escreve a tag
+└── navegador cria e controla o elemento
+```
+
+Frase para memorizar:
+
+> React e Vue não renderizam um ao outro; ambos sabem colocar uma tag no DOM, e o navegador sabe executar um Custom Element registrado.
+
+Usar a analogia de um aparelho com tomada padrão. `LabButton` possui um encaixe React. `lab-status-chip` usa o encaixe da própria plataforma web. Isso aumenta o alcance, mas não significa que Web Components substituem todos os componentes específicos de framework.
+
+Mostrar o registro idempotente como uma regra global do navegador:
+
+```ts
+if (!customElements.get('lab-status-chip')) {
+  customElements.define('lab-status-chip', LabStatusChipElement);
+}
+```
+
+O shell e o remote Vue podem carregar cópias do pacote na mesma página. O registry é global, portanto a consulta impede uma segunda definição do mesmo nome.
+
+### Shadow DOM sem misticismo
+
+```text
+<lab-status-chip>
+└── #shadow-root
+    ├── style
+    └── span.chip
+```
+
+Seletores ficam contidos, mas variáveis CSS são herdadas pelo host e podem ser consumidas internamente:
+
+```css
+color: var(--mfe-color-text, #0f172a);
+```
+
+Explicar que isso combina duas propriedades úteis: isolamento de estrutura/seletores e tematização por contrato. Também destacar que não é isolamento absoluto; eventos, propriedades herdáveis e APIs globais ainda precisam de decisões conscientes.
+
+### Tipos sem transformar o pacote em React
+
+O módulo principal expõe tipos DOM neutros. Uma entrada opcional `@mfe-lab/ui-web/react` ensina ao JSX quais atributos a tag aceita, mas seu JavaScript é vazio e não executa React. Para Vue, a configuração `isCustomElement` evita que o compilador procure um componente Vue inexistente.
+
+### Build time continua sendo build time
+
+```text
+ui-web nova versão
+→ instalar/resolver no consumidor
+→ rebuildar Shell e/ou Account
+→ publicar os consumidores
+```
+
+Não há manifest, remote entry ou servidor para `ui-web`. Ser framework-agnostic não é o mesmo que possuir deploy independente.
+
+Fechar comparando as três camadas:
+
+```text
+design-tokens → valores visuais neutros
+ui-react      → componentes com melhor DX para React
+ui-web        → componente nativo atravessando frameworks
+remotes       → aplicações/domínios carregados em runtime
+```
+
+### O significado concreto de `workspace:*`
+
+Explicar que `workspace:*` não significa “qualquer versão da internet”. O prefixo obriga o pnpm a localizar um pacote com aquele nome dentro do workspace e criar uma ligação local. O `*` aceita a versão atualmente declarada pelo pacote encontrado.
+
+```text
+apps/shell-react
+└── @mfe-lab/ui-web: workspace:*
+              │
+              └── ligação local → packages/ui-web
+```
+
+Mesmo ligado localmente, o consumidor respeita `package.json` e `exports`. Como `ui-web` aponta para `dist`, a biblioteca precisa ser construída antes do app. Na publicação, o protocolo workspace é convertido para uma versão publicável; os consumidores externos nunca recebem `workspace:*` dentro do tarball final.
+
+### Por que existe um `export {}` vazio
+
+Deixar explícito que `export {}` não exporta um objeto vazio. Ele marca um arquivo como módulo TypeScript sem criar valor de runtime. Na entrada de tipos React, sua função é evidenciar que o arquivo existe para ampliar `React.JSX.IntrinsicElements` sem poluir o escopo global como um script comum.
+
+Neste caso, `import type` já tornaria o arquivo um módulo, então `export {}` é redundante do ponto de vista técnico, mas serve como marcador explícito. O artefato `react.js` gerado com zero bytes comprova que a entrada influencia a checagem de tipos, não o navegador.
+
+### Por que o código nativo parece mais “raiz”
+
+Comparar:
+
+```text
+React/Vue
+→ template declarativo, atualização e lifecycle abstraídos
+
+Custom Element nativo
+→ HTMLElement, attachShadow, createElement,
+  observedAttributes e customElements.define explícitos
+```
+
+O laboratório evita Lit de propósito para revelar as primitivas da plataforma. Web Components são usados em design systems, widgets, integrações entre frameworks e migrações, mas componentes complexos frequentemente usam Lit, Stencil, FAST ou wrappers específicos para reduzir boilerplate e melhorar a experiência de desenvolvimento.
+
+Evitar prometer que “funciona para tudo”. A tag atravessa frameworks, mas formulários, SSR, eventos complexos, objetos e ergonomia de cada framework ainda podem exigir adapters.

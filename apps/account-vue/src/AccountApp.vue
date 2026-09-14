@@ -6,7 +6,13 @@ import {
 } from '@mfe-lab/contracts';
 import { DESIGN_TOKENS_VERSION } from '@mfe-lab/design-tokens';
 import '@mfe-lab/design-tokens/tokens.css';
+import {
+  registerLabStatusChip,
+  UI_WEB_VERSION,
+} from '@mfe-lab/ui-web';
 import { ref, watch } from 'vue';
+
+registerLabStatusChip();
 
 const props = defineProps<{
   initialUserName: string;
@@ -41,6 +47,10 @@ function toggleRole() {
     <div class="ownership">
       <span class="owner">ACCOUNT · VUE · STANDALONE</span>
       <small>Design tokens: {{ DESIGN_TOKENS_VERSION }}</small>
+      <lab-status-chip
+        :label="`UI Web: ${UI_WEB_VERSION}`"
+        status="warning"
+      />
     </div>
     <h1>Minha conta</h1>
     <p>Remote version: account-v1</p>

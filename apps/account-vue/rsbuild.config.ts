@@ -4,7 +4,13 @@ import { pluginVue } from '@rsbuild/plugin-vue';
 
 export default defineConfig({
   plugins: [
-    pluginVue(),
+    pluginVue({
+      vueLoaderOptions: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag === 'lab-status-chip',
+        },
+      },
+    }),
     pluginModuleFederation({
       name: 'account',
       filename: 'remoteEntry.js',

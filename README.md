@@ -23,8 +23,9 @@ Os três apps possuem servidores e builds próprios. Products é composto como c
 | `@mfe-lab/contracts` | `workspace:*` | Tipos e nomes de eventos framework-agnostic |
 | `@mfe-lab/design-tokens` | `workspace:*` | Variáveis CSS e versão da base visual compartilhada |
 | `@mfe-lab/ui-react` | `workspace:*` | `LabButton` e `AppBoundaryLabel` para os consumidores React |
+| `@mfe-lab/ui-web` | `workspace:*` | `<lab-status-chip>` nativo para consumidores React e Vue |
 
-Os três pacotes são resolvidos durante instalação e build; nenhum deles é um remote de Module Federation. `contracts` não contém estado nem depende de React, Vue ou DOM. `design-tokens` contém valores visuais globais, enquanto `ui-react` contém somente os dois componentes React permitidos nesta etapa. Account Vue não consome `ui-react`.
+Os quatro pacotes são resolvidos durante instalação e build; nenhum deles é um remote de Module Federation. `contracts` não contém estado nem depende de React, Vue ou DOM. `design-tokens` contém valores visuais globais, `ui-react` contém somente componentes React e `ui-web` demonstra um Custom Element controlado pelo navegador. Account Vue continua sem consumir `ui-react`, mas pode usar o componente neutro de `ui-web`.
 
 ## Comandos gerais
 
@@ -37,7 +38,7 @@ pnpm run check
 
 `pnpm run dev` inicia os três apps em paralelo. Os demais comandos executam as tarefas correspondentes em todos os apps existentes.
 
-Antes de iniciar, tipar ou buildar os apps, os scripts da raiz compilam `@mfe-lab/contracts`, `@mfe-lab/design-tokens` e `@mfe-lab/ui-react`. Assim, JavaScript, declarações TypeScript e estilos estão disponíveis aos consumidores.
+Antes de iniciar, tipar ou buildar os apps, os scripts da raiz compilam `@mfe-lab/contracts`, `@mfe-lab/design-tokens`, `@mfe-lab/ui-react` e `@mfe-lab/ui-web`. Assim, JavaScript, declarações TypeScript e estilos estão disponíveis aos consumidores.
 
 Para servir os builds de produção usados no experimento de deploy independente:
 
