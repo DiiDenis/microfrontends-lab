@@ -4,19 +4,26 @@
 
 .header {
   align-items: center;
-  border-bottom: 1px solid #cbd5e1;
+  background: var(--mfe-color-surface-muted);
+  border-bottom: 1px solid var(--mfe-color-border);
   display: flex;
-  gap: 2rem;
-  padding: 1rem 1.5rem;
+  gap: var(--mfe-space-4);
+  padding: var(--mfe-space-3) var(--mfe-space-4);
+}
+
+.ownership {
+  display: grid;
+  gap: var(--mfe-space-1);
 }
 
 .owner {
+  color: var(--mfe-color-accent);
   font-weight: 700;
 }
 
 .navigation {
   display: flex;
-  gap: 1rem;
+  gap: var(--mfe-space-3);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -24,10 +31,10 @@
 
 .status {
   display: flex;
-  gap: 1rem;
+  gap: var(--mfe-space-3);
   margin-left: auto;
 }
 
 .content {
-  padding: 1.5rem;
+  padding: var(--mfe-space-4);
 }

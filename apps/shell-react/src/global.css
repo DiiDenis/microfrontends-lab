@@ -1,6 +1,7 @@
 body {
-  font-family: system-ui, sans-serif;
+  background: var(--mfe-color-surface);
+  color: var(--mfe-color-text);
+  font-family: var(--mfe-font-family);
   margin: 0;
   min-width: 320px;
 }
-

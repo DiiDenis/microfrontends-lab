@@ -21,8 +21,9 @@ Os três apps possuem servidores e builds próprios. Products é composto como c
 | Pacote | Resolução atual | Responsabilidade |
 | --- | --- | --- |
 | `@mfe-lab/contracts` | `workspace:*` | Tipos e nomes de eventos framework-agnostic |
+| `@mfe-lab/design-tokens` | `workspace:*` | Variáveis CSS e versão da base visual compartilhada |
 
-`contracts` é resolvido durante instalação e build. Ele não é um remote de Module Federation, não contém estado e não depende de React, Vue ou DOM.
+Os dois pacotes são resolvidos durante instalação e build; nenhum deles é um remote de Module Federation. `contracts` não contém estado nem depende de React, Vue ou DOM. `design-tokens` contém valores visuais globais, enquanto os seletores dos componentes permanecem nos próprios apps.
 
 ## Comandos gerais
 
@@ -35,7 +36,7 @@ pnpm run check
 
 `pnpm run dev` inicia os três apps em paralelo. Os demais comandos executam as tarefas correspondentes em todos os apps existentes.
 
-Antes de iniciar, tipar ou buildar os apps, os scripts da raiz compilam `@mfe-lab/contracts`, garantindo que `dist/index.js` e `dist/index.d.ts` estejam disponíveis aos consumidores.
+Antes de iniciar, tipar ou buildar os apps, os scripts da raiz compilam `@mfe-lab/contracts` e `@mfe-lab/design-tokens`. Assim, JavaScript, declarações TypeScript e `dist/tokens.css` estão disponíveis aos consumidores.
 
 Para servir os builds de produção usados no experimento de deploy independente:
 

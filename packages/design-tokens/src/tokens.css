@@ -1,0 +1,14 @@
+:root {
+  --mfe-color-surface: #ffffff;
+  --mfe-color-surface-muted: #f8fafc;
+  --mfe-color-text: #0f172a;
+  --mfe-color-border: #cbd5e1;
+  --mfe-color-accent: #2563eb;
+  --mfe-space-1: 0.25rem;
+  --mfe-space-2: 0.5rem;
+  --mfe-space-3: 1rem;
+  --mfe-space-4: 1.5rem;
+  --mfe-radius-small: 0.25rem;
+  --mfe-radius-medium: 0.5rem;
+  --mfe-font-family: system-ui, sans-serif;
+}

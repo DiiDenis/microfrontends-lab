@@ -478,6 +478,7 @@ Frase curta para preservar:
 - `docs/lessons/10-react-consumes-vue.md`
 - `docs/lessons/11-build-time-contract-package.md`
 - `docs/lessons/12-cross-mfe-events.md`
+- `docs/lessons/13-design-tokens-package.md`
 - `docs/diagrams/05-before-federation.md`
 - `docs/diagrams/07-products-runtime-flow.md`
 - `docs/diagrams/10-react-host-vue-lifecycle.md`
@@ -685,3 +686,47 @@ Dados duráveis:
 Frase de fechamento:
 
 > Ao criar um MFE, planeje cedo a fronteira e os contratos. Use `window` apenas quando Custom Events forem o canal adequado — não como comunicação padrão para tudo.
+
+## 20. Design tokens: compartilhar decisões visuais sem compartilhar componentes
+
+Apresentar primeiro o problema humano:
+
+```text
+Shell escreve:   border: 1px solid #cbd5e1
+Products copia:  border: 1px solid #cbd5e1
+Account copia:   border: 1px solid #cbd5e1
+```
+
+As interfaces parecem consistentes, mas não existe uma fonte comum. Se a marca mudar a borda, três equipes precisam encontrar o mesmo valor copiado.
+
+Com tokens:
+
+```text
+@mfe-lab/design-tokens
+└── --mfe-color-border: #cbd5e1
+       ├── Shell usa no CSS Module
+       ├── Products usa no CSS Module
+       └── Account usa no style scoped
+```
+
+Frase para memorizar:
+
+> Token compartilha uma decisão visual; componente compartilha estrutura e comportamento.
+
+React e Vue não precisam entender um ao outro. Ambos geram elementos HTML, e o navegador resolve `var(--mfe-color-border)`. Por isso cores, espaçamentos, raios e tipografia podem formar um pacote neutro.
+
+Reforçar a separação:
+
+```text
+GLOBAL POR INTENÇÃO
+:root e propriedades --mfe-*
+
+LOCAL POR OWNERSHIP
+classes, seletores, layout e comportamento de cada app
+```
+
+O pacote é ligado por `workspace:*` e incluído durante o build de cada consumidor. Ele não tem manifest nem remote entry. Alterar seu fonte não muda um app já compilado; o consumidor precisa adotar a versão, rebuildar e fazer deploy.
+
+O e-book deve mostrar o erro encontrado no laboratório: o primeiro build não gerou o CSS porque o bundler eliminou um import sem exportação observável. Marcar `**/*.css` como `sideEffects` explicou, na prática, que importar CSS causa um efeito no documento mesmo sem retornar um valor JavaScript. `output.target: 'web'` também é necessário porque Rslib tem alvo Node por padrão.
+
+Alertar sobre versões divergentes. Como `:root` é global, dois remotes podem trazer versões diferentes do mesmo nome e a cascata decidir qual valor vence pela ordem de carregamento. Versionamento ajuda adoção e rollback, mas não elimina a necessidade de compatibilidade e coordenação.

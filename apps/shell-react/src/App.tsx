@@ -3,6 +3,8 @@ import {
   type CartUpdatedEventPayload,
   type ProfileUpdatedEventPayload,
 } from '@mfe-lab/contracts';
+import { DESIGN_TOKENS_VERSION } from '@mfe-lab/design-tokens';
+import '@mfe-lab/design-tokens/tokens.css';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
@@ -66,7 +68,10 @@ export function App() {
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <span className={styles.owner}>SHELL · REACT</span>
+        <div className={styles.ownership}>
+          <span className={styles.owner}>SHELL · REACT</span>
+          <small>Design tokens: {DESIGN_TOKENS_VERSION}</small>
+        </div>
 
         <nav aria-label="Navegação principal">
           <ul className={styles.navigation}>

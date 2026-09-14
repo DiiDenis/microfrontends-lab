@@ -14,3 +14,4 @@
 | 10 | Montar o Vue dentro do host React | Concluída |
 | 11 | Criar pacote de contratos em build time | Concluída |
 | 12 | Comunicar os micro frontends com Custom Events | Concluída |
+| 13 | Criar pacote compartilhado de design tokens | Concluída |

@@ -13,6 +13,9 @@ importers:
       '@mfe-lab/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@mfe-lab/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
       vue:
         specifier: 3.5.42
         version: 3.5.42(typescript@6.0.3)
@@ -38,6 +41,9 @@ importers:
       '@mfe-lab/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@mfe-lab/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -69,6 +75,9 @@ importers:
       '@mfe-lab/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@mfe-lab/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -99,6 +108,15 @@ importers:
         version: 7.0.2
 
   packages/contracts:
+    devDependencies:
+      '@rslib/core':
+        specifier: 0.23.2
+        version: 0.23.2(typescript@7.0.2)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/design-tokens:
     devDependencies:
       '@rslib/core':
         specifier: 0.23.2

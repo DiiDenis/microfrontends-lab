@@ -4,6 +4,8 @@ import {
   type AccountRole,
   type ProfileUpdatedEventPayload,
 } from '@mfe-lab/contracts';
+import { DESIGN_TOKENS_VERSION } from '@mfe-lab/design-tokens';
+import '@mfe-lab/design-tokens/tokens.css';
 import { ref, watch } from 'vue';
 
 const props = defineProps<{
@@ -36,7 +38,10 @@ function toggleRole() {
 
 <template>
   <main class="account">
-    <span class="owner">ACCOUNT · VUE · STANDALONE</span>
+    <div class="ownership">
+      <span class="owner">ACCOUNT · VUE · STANDALONE</span>
+      <small>Design tokens: {{ DESIGN_TOKENS_VERSION }}</small>
+    </div>
     <h1>Minha conta</h1>
     <p>Remote version: account-v1</p>
     <p>Origem: {{ source }}</p>
@@ -58,28 +63,45 @@ function toggleRole() {
 
 <style scoped>
 .account {
-  font-family: system-ui, sans-serif;
+  color: var(--mfe-color-text);
+  font-family: var(--mfe-font-family);
   margin: 0 auto;
   max-width: 40rem;
-  padding: 1.5rem;
+  padding: var(--mfe-space-4);
+}
+
+.ownership {
+  display: grid;
+  gap: var(--mfe-space-1);
 }
 
 .owner {
+  color: var(--mfe-color-accent);
   font-weight: 700;
 }
 
 .details {
   display: grid;
-  gap: 1rem;
-  margin: 1.5rem 0;
+  gap: var(--mfe-space-3);
+  margin: var(--mfe-space-4) 0;
 }
 
 .details div {
-  border: 1px solid #cbd5e1;
-  padding: 1rem;
+  background: var(--mfe-color-surface);
+  border: 1px solid var(--mfe-color-border);
+  border-radius: var(--mfe-radius-medium);
+  padding: var(--mfe-space-3);
 }
 
 .details dd {
-  margin: 0.25rem 0 0;
+  margin: var(--mfe-space-1) 0 0;
+}
+
+button {
+  background: var(--mfe-color-accent);
+  border: 0;
+  border-radius: var(--mfe-radius-small);
+  color: var(--mfe-color-surface);
+  padding: var(--mfe-space-2) var(--mfe-space-3);
 }
 </style>

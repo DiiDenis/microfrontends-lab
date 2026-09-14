@@ -2,6 +2,8 @@ import {
   LAB_EVENT_NAMES,
   type CartUpdatedEventPayload,
 } from '@mfe-lab/contracts';
+import { DESIGN_TOKENS_VERSION } from '@mfe-lab/design-tokens';
+import '@mfe-lab/design-tokens/tokens.css';
 import { useEffect, useState } from 'react';
 
 import styles from './ProductApp.module.css';
@@ -28,7 +30,10 @@ export function ProductApp() {
 
   return (
     <main className={styles.app}>
-      <span className={styles.owner}>PRODUCTS · REACT · STANDALONE</span>
+      <div className={styles.ownership}>
+        <span className={styles.owner}>PRODUCTS · REACT · STANDALONE</span>
+        <small>Design tokens: {DESIGN_TOKENS_VERSION}</small>
+      </div>
       <h1>Produtos</h1>
       <p>Remote version: products-v2</p>
       <p>Itens adicionados: {addedItems}</p>

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mfe-lab/contracts": "workspace:*",
+    "@mfe-lab/design-tokens": "workspace:*",
     "vue": "3.5.42"
   },
   "devDependencies": {
