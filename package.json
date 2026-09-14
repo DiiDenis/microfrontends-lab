@@ -34,7 +34,15 @@
     "typecheck:contracts": "pnpm --filter @mfe-lab/contracts typecheck",
     "typecheck:design-tokens": "pnpm --filter @mfe-lab/design-tokens typecheck",
     "typecheck:ui-react": "pnpm --filter @mfe-lab/ui-react typecheck",
-    "typecheck:ui-web": "pnpm --filter @mfe-lab/ui-web typecheck"
+    "typecheck:ui-web": "pnpm --filter @mfe-lab/ui-web typecheck",
+    "test": "pnpm run test:unit && pnpm run test:e2e",
+    "test:unit": "vitest run",
+    "test:e2e": "pnpm run packages:build && playwright test",
+    "check:all": "pnpm run check && pnpm run test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "vitest": "5.0.0"
   },
   "engines": {
     "node": ">=24.18.0 <25"

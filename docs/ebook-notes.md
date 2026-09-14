@@ -1310,3 +1310,451 @@ Explicar que prefixo reduz probabilidade de colisão, mas continua sendo conven�
 Frase para entrevista:
 
 > Module Federation compõe módulos, não cria uma sandbox de CSS. Eu escolho isolamento no producer, mantenho o body no host, uso tokens globais por contrato e torno as fronteiras observáveis no DOM.
+
+## 28. Testar o prédio montado, não apenas cada apartamento
+
+Pense novamente nos três projetos: Shell, Products e Account. Um teste de Products aberto sozinho na porta 3001 responde “a loja funciona?”. Ele não responde “o Shell encontrou a loja, carregou seu código de outro servidor e ouviu seu evento?”. Para provar micro frontends, parte da suíte precisa entrar pela porta 3000, como o usuário real.
+
+```text
+Teste isolado
+Products:3001 → botão altera contador local
+
+Teste de composição
+Shell:3000/products
+  → manifest em Products:3001
+  → ProductApp remoto aparece
+  → clique publica Custom Event
+  → Shell atualiza Carrinho: 1
+```
+
+Vitest funciona como uma inspeção de uma peça na bancada: rápida e específica. Playwright funciona como alguém caminhando pelo prédio pronto: entra pela recepção, visita os apartamentos e confirma que portas, avisos e comunicação funcionam juntos.
+
+O teste de Account entra, sai e entra novamente porque lifecycle é parte do contrato. Ao sair, o React executa o cleanup e o Vue deve desmontar sua raiz. Se o teste encontrar duas raízes, existe vazamento ou montagem duplicada.
+
+Para simular Products fora do ar, o navegador bloqueia as requisições da porta 3001. Isso é determinístico: não depende de encontrar e matar um processo. O resultado esperado não é o Shell fingir que Products existe; é mostrar um fallback na área remota e preservar Home.
+
+Frase curta para guardar:
+
+> Teste unitário prova uma peça; E2E pela URL do host prova que os builds independentes realmente se compõem em runtime.
+
+### Anatomia mínima de um teste Playwright
+
+```ts
+import { expect, test } from '@playwright/test';
+
+test('usuário abre Products', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Products' }).click();
+
+  await expect(page).toHaveURL(/\/products$/);
+  await expect(
+    page.getByRole('heading', { name: 'Produtos' }),
+  ).toBeVisible();
+});
+```
+
+Ler de forma humana:
+
+```text
+test   → dá nome ao comportamento
+page   → representa uma aba real do navegador
+goto   → abre uma URL
+locator→ encontra algo como o usuário percebe
+click  → realiza a ação
+expect → confere o resultado observável
+```
+
+O `await` é importante porque navegação, ações e expectativas web são assíncronas. As expectativas de navegador tentam novamente até o resultado aparecer ou o timeout terminar. Isso permite esperar um remote carregar sem inserir pausas fixas.
+
+### Navegação mais usada
+
+```ts
+await page.goto('/');
+await page.goto('/products');
+
+await page.getByRole('link', { name: 'Account' }).click();
+await expect(page).toHaveURL(/\/account$/);
+
+await page.goBack();
+await page.reload();
+```
+
+`page.goto` abre diretamente uma URL. Clicar no link exercita a navegação que o usuário realmente usa. Em teste de roteamento, normalmente vale conferir também a URL com `toHaveURL`.
+
+### Como localizar elementos
+
+Prioridade prática:
+
+```text
+1. getByRole      → botão, link, heading, checkbox
+2. getByLabel     → campos de formulário
+3. getByText      → conteúdo visível
+4. getByPlaceholder / getByAltText / getByTitle
+5. getByTestId    → contrato de teste quando a semântica não basta
+6. locator CSS    → último recurso ou fronteira técnica explícita
+```
+
+Exemplos:
+
+```ts
+page.getByRole('button', { name: 'Adicionar' });
+page.getByRole('heading', { name: 'Produtos' });
+page.getByLabel('Nome');
+page.getByText('Carrinho: 1');
+page.getByTestId('product-card');
+page.locator('[data-mfe-owner="account-vue"]');
+```
+
+Para escolher um produto sem depender da posição:
+
+```ts
+const product = page
+  .getByRole('listitem')
+  .filter({ hasText: 'Teclado mecânico' });
+
+await product.getByRole('button', { name: 'Adicionar' }).click();
+```
+
+`first()`, `last()` e `nth()` existem, mas um filtro que descreve o item costuma ser mais resistente a mudanças na ordem.
+
+### Ações comuns no navegador
+
+```ts
+await page.getByRole('button', { name: 'Salvar' }).click();
+await page.getByLabel('Nome').fill('Denis');
+await page.getByLabel('E-mail').press('Enter');
+await page.getByRole('checkbox', { name: 'Ativo' }).check();
+await page.getByLabel('Papel').selectOption('operator');
+await page.getByLabel('Avatar').setInputFiles('fixtures/avatar.png');
+```
+
+O Playwright realiza verificações de ação antes de clicar ou preencher, como aguardar o elemento existir, estar visível e habilitado.
+
+### `expect` mais usado no Playwright
+
+Expectativas sobre a interface devem receber `await`:
+
+```ts
+await expect(locator).toBeVisible();
+await expect(locator).toBeHidden();
+await expect(locator).toBeEnabled();
+await expect(locator).toBeDisabled();
+await expect(locator).toBeChecked();
+await expect(locator).toHaveText('Produtos');
+await expect(locator).toContainText('Carrinho');
+await expect(locator).toHaveValue('Denis');
+await expect(locator).toHaveCount(2);
+await expect(locator).toHaveAttribute('data-status', 'success');
+await expect(page).toHaveURL(/\/products$/);
+await expect(page).toHaveTitle('Produtos');
+```
+
+Negação:
+
+```ts
+await expect(locator).not.toBeVisible();
+await expect(page).not.toHaveURL(/\/login$/);
+```
+
+Expectativas sobre valores comuns também existem:
+
+```ts
+expect(total).toBe(2);
+expect(product).toEqual({ name: 'Teclado', price: 349.9 });
+expect(names).toContain('Teclado');
+expect(result).toBeDefined();
+expect(success).toBeTruthy();
+```
+
+Diferença útil:
+
+```text
+toBe    → igualdade de valor primitivo ou mesma referência
+toEqual → compara a estrutura de objetos e arrays
+```
+
+```ts
+expect(2).toBe(2);
+expect({ total: 2 }).toEqual({ total: 2 });
+```
+
+### Payload de evento entre micro frontends
+
+Exemplo unitário usando o contrato real do laboratório:
+
+```ts
+const payload = {
+  totalItems: 2,
+} satisfies CartUpdatedEventPayload;
+
+const event = new CustomEvent(LAB_EVENT_NAMES.cartUpdated, {
+  detail: payload,
+});
+
+expect(event.detail).toEqual({ totalItems: 2 });
+```
+
+`satisfies` pede ao TypeScript para conferir o formato sem apagar a inferência específica do objeto. O teste verifica o valor em runtime; o TypeScript verifica o contrato durante o desenvolvimento.
+
+### Mock de função com Vitest
+
+```ts
+import { expect, test, vi } from 'vitest';
+
+test('envia o produto escolhido', () => {
+  const onAdd = vi.fn();
+  const payload = { productId: 'keyboard-1', quantity: 1 };
+
+  onAdd(payload);
+
+  expect(onAdd).toHaveBeenCalledTimes(1);
+  expect(onAdd).toHaveBeenCalledWith(payload);
+});
+```
+
+Controlando retorno síncrono:
+
+```ts
+const getTotal = vi.fn().mockReturnValue(2);
+
+expect(getTotal()).toBe(2);
+expect(getTotal).toHaveBeenCalled();
+```
+
+Controlando Promise bem-sucedida e falha:
+
+```ts
+const loadProducts = vi.fn();
+
+loadProducts.mockResolvedValue([{ id: 'keyboard-1' }]);
+await expect(loadProducts()).resolves.toEqual([{ id: 'keyboard-1' }]);
+
+loadProducts.mockRejectedValue(new Error('Remote indisponível'));
+await expect(loadProducts()).rejects.toThrow('Remote indisponível');
+```
+
+Espionando um método real:
+
+```ts
+const analytics = {
+  track(eventName: string) {
+    return eventName;
+  },
+};
+
+const trackSpy = vi.spyOn(analytics, 'track');
+
+analytics.track('product-added');
+
+expect(trackSpy).toHaveBeenCalledWith('product-added');
+trackSpy.mockRestore();
+```
+
+Regra mental:
+
+```text
+vi.fn()    → cria uma função controlada do zero
+vi.spyOn() → observa ou substitui temporariamente um método existente
+vi.mock()  → substitui um módulo importado
+```
+
+Mockando os métodos de um objeto inteiro:
+
+```ts
+const productService = {
+  async list() {
+    return [{ id: 'real-product' }];
+  },
+  async findById(id: string) {
+    return { id };
+  },
+};
+
+const serviceMock = vi.mockObject(productService);
+serviceMock.list.mockResolvedValue([{ id: 'keyboard-1' }]);
+
+await expect(serviceMock.list()).resolves.toEqual([
+  { id: 'keyboard-1' },
+]);
+```
+
+`vi.mockObject` é útil para um objeto com vários métodos, mas `vi.spyOn` costuma deixar mais explícito qual método interessa ao teste.
+
+Mocks devem ser restaurados entre testes quando alteram implementações compartilhadas. Evitar mockar tudo: se o teste substitui a rota, o remote, o evento e o componente ao mesmo tempo, ele pode continuar verde sem provar a integração real.
+
+### Mock de resposta HTTP no Playwright
+
+O Playwright não precisa alterar a API real. `page.route` pode responder dentro do navegador:
+
+```ts
+test('mostra dois produtos da API simulada', async ({ page }) => {
+  const products = [
+    { id: 'keyboard-1', name: 'Teclado' },
+    { id: 'mouse-1', name: 'Mouse' },
+  ];
+
+  await page.route('**/api/products', async (route) => {
+    await route.fulfill({
+      body: JSON.stringify(products),
+      contentType: 'application/json',
+      status: 200,
+    });
+  });
+
+  await page.goto('/products');
+
+  await expect(page.getByRole('listitem')).toHaveCount(2);
+});
+```
+
+Simulando erro HTTP:
+
+```ts
+await page.route('**/api/products', async (route) => {
+  await route.fulfill({
+    body: JSON.stringify({ message: 'Serviço indisponível' }),
+    contentType: 'application/json',
+    status: 503,
+  });
+});
+```
+
+Simulando falha de rede, como no laboratório:
+
+```ts
+await page.route('http://localhost:3001/**', async (route) => {
+  await route.abort('connectionrefused');
+});
+```
+
+Diferença para memorizar:
+
+```text
+Vitest + vi.fn/vi.mock
+→ substitui funções e módulos dentro do processo do teste
+
+Playwright + page.route
+→ intercepta requisições que a página faria pelo navegador
+```
+
+### Verificar request, response e payload HTTP
+
+Aguardar o manifest real antes da ação:
+
+```ts
+const manifestResponse = page.waitForResponse(
+  (response) =>
+    response.url() === 'http://localhost:3001/mf-manifest.json' &&
+    response.ok(),
+);
+
+await page.getByRole('link', { name: 'Products' }).click();
+await manifestResponse;
+```
+
+Capturar o payload enviado por uma tela:
+
+```ts
+const createRequest = page.waitForRequest(
+  (request) =>
+    request.url().endsWith('/api/products') &&
+    request.method() === 'POST',
+);
+
+await page.getByRole('button', { name: 'Salvar' }).click();
+
+const request = await createRequest;
+const payload: unknown = request.postDataJSON();
+
+expect(payload).toEqual({
+  name: 'Teclado',
+  price: 349.9,
+});
+```
+
+Isso confere o contrato observado na rede sem chamar diretamente a função interna que implementa o formulário.
+
+### Preparação e limpeza
+
+```ts
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+
+beforeEach(() => {
+  // estado necessário antes de cada teste
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+```
+
+No Playwright, cada teste recebe seu próprio contexto isolado por padrão. Mesmo assim, dados persistidos num backend real podem exigir fixtures ou limpeza explícita.
+
+### O que evitar
+
+```ts
+// Frágil: depende da implementação e de classes que o build pode renomear.
+page.locator('.src-ProductApp-module__title-mo0K76');
+
+// Frágil: pausa fixa mesmo que a tela fique pronta antes ou depois.
+await page.waitForTimeout(3000);
+
+// Melhor: descreve o que o usuário observa e espera automaticamente.
+await expect(
+  page.getByRole('heading', { name: 'Produtos' }),
+).toBeVisible();
+```
+
+Não confundir `data-testid` com algo proibido. Ele é válido quando não existe um papel, label ou texto público estável. Só não deve ser a primeira resposta para todos os elementos.
+
+### Perguntas comuns de entrevista
+
+**Por que Playwright e Vitest juntos?**
+
+> Vitest oferece feedback rápido sobre funções e contratos isolados. Playwright valida a experiência real no navegador, incluindo navegação, rede e integração entre builds. Uso cada um no nível em que entrega mais confiança com menor custo.
+
+**Por que Playwright é especialmente útil em micro frontends?**
+
+> Porque parte da composição acontece em runtime. O E2E consegue provar que o host buscou o manifest, carregou o remote, renderizou sua superfície pública e manteve comunicação e fallback funcionando.
+
+**O que torna um teste E2E frágil?**
+
+> Seletores ligados ao DOM interno, esperas fixas, dependência de ordem, dados externos instáveis e cenários grandes demais. Prefiro papéis e nomes acessíveis, auto-wait, isolamento de dados e poucos fluxos críticos.
+
+**Mock é sempre melhor que usar a integração real?**
+
+> Não. Mock torna falhas e dados determinísticos, mas pode esconder incompatibilidades. Mantenho testes unitários com mocks e alguns E2E atravessando integrações reais, principalmente os contratos críticos.
+
+**Qual teste prova a federação deste laboratório?**
+
+> O teste parte da URL do Shell, navega para a rota, aguarda a resposta do manifest em outra porta e verifica a marca do remote. Depois cruza outra fronteira por Custom Event e confirma o resultado no header do host.
+
+### Consulta rápida
+
+| Intenção | API típica |
+| --- | --- |
+| Abrir uma rota | `page.goto('/products')` |
+| Clicar em um link | `getByRole('link', { name }).click()` |
+| Preencher campo | `getByLabel('Nome').fill('Denis')` |
+| Confirmar texto visível | `expect(locator).toBeVisible()` |
+| Confirmar texto exato | `expect(locator).toHaveText(texto)` |
+| Confirmar URL | `expect(page).toHaveURL(...)` |
+| Confirmar quantidade | `expect(locator).toHaveCount(2)` |
+| Mockar uma função | `vi.fn()` |
+| Observar método real | `vi.spyOn(objeto, 'método')` |
+| Mockar Promise resolvida | `mockResolvedValue(valor)` |
+| Mockar Promise rejeitada | `mockRejectedValue(erro)` |
+| Mockar API no navegador | `page.route(..., route.fulfill)` |
+| Simular rede indisponível | `page.route(..., route.abort)` |
+| Aguardar resposta | `page.waitForResponse(...)` |
+| Capturar request | `page.waitForRequest(...)` |
+
+Fontes primárias para atualizar a futura edição:
+
+- [Playwright — Locators](https://playwright.dev/docs/locators)
+- [Playwright — Assertions](https://playwright.dev/docs/test-assertions)
+- [Playwright — Mock APIs](https://playwright.dev/docs/mock)
+- [Playwright — Network](https://playwright.dev/docs/network)
+- [Vitest — Mock Functions](https://vitest.dev/guide/mocking/functions)
+- [Vitest — `vi` API](https://vitest.dev/api/vi)
+- [Vitest — `expect` API](https://vitest.dev/api/expect)
