@@ -27,7 +27,7 @@ Os três apps possuem servidores e builds próprios. Products é composto como c
 
 Os quatro pacotes são publicados no registry npm local e resolvidos durante instalação e build; nenhum deles é um remote de Module Federation. `contracts` não contém estado nem depende de React, Vue ou DOM. `design-tokens` contém valores visuais globais, `ui-react` contém somente componentes React e `ui-web` demonstra um Custom Element controlado pelo navegador. Account Vue continua sem consumir `ui-react`, mas pode usar o componente neutro de `ui-web`.
 
-O Verdaccio possui `ui-react@1.0.0` e `ui-react@1.1.0`. Products adotou `1.1.0` e usa o botão compacto; o shell permanece propositalmente em `1.0.0` para demonstrar que publicar uma biblioteca não atualiza consumidores automaticamente. Products também está em `products-v3`, carregado pelo shell em runtime sem rebuild do host.
+O Verdaccio possui `ui-react@1.0.0` e `ui-react@1.1.0`. Products adotou `1.1.0` e usa o botão compacto; o shell permanece propositalmente em `1.0.0` para demonstrar que publicar uma biblioteca não atualiza consumidores automaticamente. Products também está em `products-v4`, carregado pelo shell em runtime sem rebuild do host.
 
 ## Registry npm local
 
@@ -104,3 +104,40 @@ O shell registra `products` pelo manifest `http://localhost:3001/mf-manifest.jso
 O shell também registra `account` pelo manifest `http://localhost:3002/mf-manifest.json`. `ACCOUNT_REMOTE_URL` permite configurar outra origem; o fallback local permanece explícito. Como Account é Vue, o shell não renderiza seu componente diretamente: cria um container e chama `account/mount`.
 
 Em desenvolvimento, o Shell mostra um painel recolhível `Diagnóstico técnico dos micro frontends`. Ele importa módulos públicos pequenos dos dois remotes e apresenta versões de frameworks, remotes, `ui-react`, os endereços efetivos dos manifests e se Products reutiliza a mesma instância de React observada pelo Shell. O painel não lê globals internos do Module Federation e não é incluído na interface de produção.
+
+## Containers locais de produção
+
+Cada app possui seu próprio Dockerfile multi-stage e sua própria imagem final com Nginx. As imagens não são publicadas e servem apenas para simular produção nesta máquina.
+
+| App | URL no navegador | Imagem local |
+| --- | --- | --- |
+| Shell | `http://localhost:8080` | `microfrontends-lab-shell:local` |
+| Products | `http://localhost:8081` | `microfrontends-lab-products:local` |
+| Account | `http://localhost:8082` | `microfrontends-lab-account:local` |
+
+Use:
+
+```powershell
+pnpm run registry:up
+pnpm run containers:build
+pnpm run containers:up
+pnpm run containers:smoke
+pnpm run containers:rebuild:products
+pnpm run containers:down
+pnpm run registry:down
+```
+
+O Verdaccio é necessário durante a instalação dos pacotes `@mfe-lab` no estágio de build, mas não serve os apps em runtime. Depois de construir as imagens, ele pode ser desligado sem interromper os três containers.
+
+### URLs configuráveis
+
+| Variável | Momento | Uso |
+| --- | --- | --- |
+| `MFE_REGISTRY_URL` | build Docker | registry usado pelo pnpm dentro do estágio de build |
+| `PRODUCTS_REMOTE_URL` | build do Shell | URL pública do manifest de Products embutida no bundle |
+| `ACCOUNT_REMOTE_URL` | build do Shell | URL pública do manifest de Account embutida no bundle |
+| `PRODUCTS_ASSET_PREFIX` | build de Products | origem pública gravada no manifest para seus assets |
+| `ACCOUNT_ASSET_PREFIX` | build de Account | origem pública gravada no manifest para seus assets |
+| `MFE_ALLOWED_ORIGIN` | runtime do Nginx | origem autorizada pelo CORS dos containers |
+
+`host.docker.internal` aparece somente na comunicação do build com o Verdaccio executado no host. As URLs que o JavaScript entrega ao navegador usam `localhost`, pois o navegador não participa da rede interna do Compose e não consegue resolver nomes como `products:80`.

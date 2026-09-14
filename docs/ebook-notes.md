@@ -1758,3 +1758,202 @@ Fontes primárias para atualizar a futura edição:
 - [Vitest — Mock Functions](https://vitest.dev/guide/mocking/functions)
 - [Vitest — `vi` API](https://vitest.dev/api/vi)
 - [Vitest — `expect` API](https://vitest.dev/api/expect)
+
+## Etapa 22 — Do código ao container, sem mistério
+
+### A história humana
+
+Pense novamente nos três projetos:
+
+```text
+Shell          Products          Account
+React          React             Vue
+porta 8080     porta 8081        porta 8082
+```
+
+Antes, o Rsbuild servia tudo como ambiente de desenvolvimento. Agora cada time pode dizer:
+
+> “Eu compilo meu app, empacoto meus próprios arquivos numa imagem e coloco somente o meu container no ar.”
+
+O Shell não ganhou o código-fonte de Products nem de Account. Ele continua conhecendo apenas os contratos e as URLs dos manifests.
+
+### Ilustração para o ebook
+
+```mermaid
+flowchart LR
+  subgraph Repo[Um monorepo]
+    S[apps/shell-react]
+    P[apps/products-react]
+    A[apps/account-vue]
+  end
+
+  S --> SI[Imagem Shell]
+  P --> PI[Imagem Products]
+  A --> AI[Imagem Account]
+
+  SI --> SC[Container :8080]
+  PI --> PC[Container :8081]
+  AI --> AC[Container :8082]
+
+  B[Navegador] --> SC
+  B -. manifest e chunks .-> PC
+  B -. manifest e chunks .-> AC
+```
+
+O desenho deve virar uma ilustração editorial na versão final, preservando a ideia de três caixas de entrega saindo do mesmo repositório. Páginas ilustradas ou com fundo colorido devem continuar full bleed, sem margens brancas.
+
+### Pasta, imagem e processo
+
+Uma comparação simples:
+
+```text
+código-fonte = receita
+dist         = prato já preparado
+imagem       = embalagem lacrada com o prato e instruções de serviço
+container    = uma embalagem aberta e sendo servida agora
+```
+
+Tecnicamente:
+
+- Rsbuild transforma o fonte em `dist`;
+- Docker transforma Nginx + configuração + `dist` numa imagem;
+- Docker executa um container a partir da imagem.
+
+### Por que existem dois `FROM` no Dockerfile
+
+```dockerfile
+FROM node:24.18.0-alpine AS build
+# instala, compila e produz dist
+
+FROM nginx:1.28.2-alpine AS runtime
+# recebe apenas configuração e dist
+```
+
+O segundo `FROM` começa outra base. É como usar uma cozinha completa para preparar o prato e depois entregar somente o prato na embalagem — o fogão, as panelas e a despensa não viajam junto. Foi por isso que as imagens finais do laboratório não tinham Node nem `node_modules`.
+
+### “Mas está tudo no mesmo monorepo. É independente mesmo?”
+
+Sim, nos aspectos que configuramos:
+
+```text
+mesmo Git          → facilita compartilhar histórico e padrões
+builds separados   → cada app produz seu próprio dist
+imagens separadas  → cada app tem seu próprio pacote de runtime
+containers separados → cada app pode parar/reiniciar sozinho
+```
+
+Independência não significa ausência de relações. Se Products remover `./ProductApp` ou quebrar seu contrato de props, o Shell poderá falhar naquela fronteira. O termo correto é deploy independente, não independência absoluta.
+
+### O nome interno do Docker não é uma URL do usuário
+
+Dentro do Compose, um container consegue conversar com outro pelo nome:
+
+```text
+shell container → http://products:80
+```
+
+Mas Module Federation faz o navegador buscar o remote. O navegador está fora da rede interna do Compose:
+
+```text
+navegador → http://localhost:8081/mf-manifest.json
+```
+
+Em produção, seria algo como:
+
+```text
+navegador → https://products.minhaempresa.com/mf-manifest.json
+```
+
+Frase de entrevista:
+
+> A URL registrada no host deve ser pública da perspectiva do navegador. DNS interno do orquestrador só funciona para comunicação servidor-servidor e não pode ser entregue ao JavaScript do cliente.
+
+### Build-time versus runtime
+
+```text
+MFE_REGISTRY_URL
+→ usado pelo pnpm durante o build para baixar @mfe-lab/*
+
+PRODUCTS_REMOTE_URL / ACCOUNT_REMOTE_URL
+→ usadas no build do Shell e gravadas no JavaScript
+
+PRODUCTS_ASSET_PREFIX / ACCOUNT_ASSET_PREFIX
+→ usadas no build do remote e gravadas no manifest
+
+MFE_ALLOWED_ORIGIN
+→ lida pelo Nginx ao iniciar para gerar o header CORS
+```
+
+Se uma URL foi incorporada pelo Rsbuild, alterar somente `environment` num container pronto não reescreve magicamente o JavaScript. É necessário um novo build ou uma estratégia explícita de configuração runtime, que este laboratório ainda não adicionou.
+
+### Verdaccio não serve a tela
+
+O Verdaccio participa desta seta:
+
+```text
+Docker build → pnpm install → Verdaccio → pacote @mfe-lab
+```
+
+Depois que a imagem está pronta, o pacote já foi incorporado ao bundle:
+
+```text
+navegador → Nginx → JavaScript pronto
+```
+
+Portanto, desligar o Verdaccio não derruba a aplicação em execução. Ele volta a ser necessário para uma instalação ou build que precise baixar os pacotes.
+
+### Cache do manifest versus cache do chunk
+
+```text
+mf-manifest.json
+nome estável, conteúdo muda
+→ no-store ou cache muito curto
+
+remoteEntry.js
+nome estável neste build
+→ no-cache e revalidação
+
+ProductApp.613ccc5cd6.js
+hash muda quando o conteúdo muda
+→ cache longo e immutable
+```
+
+Analogia:
+
+> O manifest é o quadro de partidas do aeroporto: você quer consultar uma versão recente. O chunk com hash é o número único de um voo já definido: se o número é o mesmo, aquele conteúdo pode continuar guardado.
+
+### A prova products-v3 → products-v4
+
+O laboratório começou o teste assim:
+
+```text
+Shell image/container:    A
+Products image/container: B, mostrando products-v3
+Account image/container:  C
+```
+
+Foi alterada somente a etiqueta de Products e executado:
+
+```powershell
+pnpm run containers:rebuild:products
+```
+
+Depois:
+
+```text
+Shell image/container:    A  ← igual
+Products image/container: D  ← novo, mostrando products-v4
+Account image/container:  C  ← igual
+```
+
+O navegador recarregou a rota no mesmo Shell, consultou o manifest estável em `8081`, encontrou o novo chunk com hash e mostrou `products-v4`.
+
+### O que a etapa não fez
+
+- não publicou imagem no Docker Hub;
+- não criou Kubernetes, Traefik ou cluster;
+- não fez deploy na Hostinger ou em nuvem;
+- não transformou Verdaccio em dependência de runtime;
+- não colocou os três apps na mesma imagem.
+
+Isso é suficiente para aprender a fronteira de empacotamento e validar a arquitetura localmente sem custo de hospedagem.

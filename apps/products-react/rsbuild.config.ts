@@ -2,6 +2,9 @@ import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
+const productsAssetPrefix =
+  process.env.PRODUCTS_ASSET_PREFIX ?? 'http://localhost:3001/';
+
 export default defineConfig({
   plugins: [
     pluginReact(),
@@ -39,7 +42,7 @@ export default defineConfig({
     }),
   ],
   output: {
-    assetPrefix: 'http://localhost:3001/',
+    assetPrefix: productsAssetPrefix,
   },
   server: {
     port: 3001,

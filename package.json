@@ -8,8 +8,8 @@
     "build": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm run build:ui-react && pnpm run build:ui-web && pnpm --filter ./apps/* run build",
     "typecheck": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm run build:ui-react && pnpm run build:ui-web && pnpm run typecheck:contracts && pnpm run typecheck:design-tokens && pnpm run typecheck:ui-react && pnpm run typecheck:ui-web && pnpm --filter ./apps/* run typecheck",
     "check": "pnpm run typecheck && pnpm --filter ./apps/* run build",
-    "registry:up": "docker compose -f infra/verdaccio/docker-compose.yml up -d --wait",
-    "registry:down": "docker compose -f infra/verdaccio/docker-compose.yml down",
+    "registry:up": "docker volume create microfrontends-lab-registry_verdaccio-storage && docker compose -f infra/verdaccio/docker-compose.yml up -d --wait verdaccio",
+    "registry:down": "docker compose -f infra/verdaccio/docker-compose.yml stop verdaccio",
     "packages:install": "pnpm install --filter \"./packages/*\" --frozen-lockfile",
     "packages:build": "pnpm run build:contracts && pnpm run build:design-tokens && pnpm run build:ui-react && pnpm run build:ui-web",
     "packages:pack:check": "pnpm --dir packages/contracts pack --dry-run --json && pnpm --dir packages/design-tokens pack --dry-run --json && pnpm --dir packages/ui-react pack --dry-run --json && pnpm --dir packages/ui-web pack --dry-run --json",
@@ -38,7 +38,12 @@
     "test": "pnpm run test:unit && pnpm run test:e2e",
     "test:unit": "vitest run",
     "test:e2e": "pnpm run packages:build && playwright test",
-    "check:all": "pnpm run check && pnpm run test"
+    "check:all": "pnpm run check && pnpm run test",
+    "containers:build": "docker compose build shell products account",
+    "containers:up": "docker compose up -d --wait shell products account",
+    "containers:down": "docker compose stop shell products account",
+    "containers:rebuild:products": "docker compose build products && docker compose up -d --no-deps products",
+    "containers:smoke": "node scripts/smoke-containers.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

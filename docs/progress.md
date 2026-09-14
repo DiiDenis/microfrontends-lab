@@ -23,3 +23,4 @@
 | 19 | Adicionar resiliência às fronteiras remotas em runtime | Concluída |
 | 20 | Demonstrar e corrigir isolamento de CSS | Concluída |
 | 21 | Adicionar testes de integração | Concluída |
+| 22 | Empacotar os apps em containers independentes | Concluída |

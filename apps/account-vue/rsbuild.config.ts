@@ -2,6 +2,9 @@ import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
 import { defineConfig } from '@rsbuild/core';
 import { pluginVue } from '@rsbuild/plugin-vue';
 
+const accountAssetPrefix =
+  process.env.ACCOUNT_ASSET_PREFIX ?? 'http://localhost:3002/';
+
 export default defineConfig({
   plugins: [
     pluginVue({
@@ -33,7 +36,7 @@ export default defineConfig({
     }),
   ],
   output: {
-    assetPrefix: 'http://localhost:3002/',
+    assetPrefix: accountAssetPrefix,
   },
   server: {
     port: 3002,

@@ -1,9 +1,11 @@
-name: microfrontends-lab-registry
+name: microfrontends-lab
 
 services:
   verdaccio:
     image: verdaccio/verdaccio:6.10.3
     container_name: microfrontends-lab-verdaccio
+    profiles:
+      - registry
     ports:
       - '127.0.0.1:4873:4873'
     volumes:
@@ -21,3 +23,5 @@ services:
 
 volumes:
   verdaccio-storage:
+    external: true
+    name: microfrontends-lab-registry_verdaccio-storage

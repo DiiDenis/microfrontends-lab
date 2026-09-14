@@ -1,0 +1,54 @@
+name: microfrontends-lab
+
+include:
+  - infra/verdaccio/docker-compose.yml
+
+services:
+  shell:
+    image: microfrontends-lab-shell:local
+    container_name: microfrontends-lab-shell
+    build:
+      context: .
+      dockerfile: apps/shell-react/Dockerfile
+      args:
+        MFE_REGISTRY_URL: http://host.docker.internal:4873/
+        PRODUCTS_REMOTE_URL: http://localhost:8081/mf-manifest.json
+        ACCOUNT_REMOTE_URL: http://localhost:8082/mf-manifest.json
+      extra_hosts:
+        - host.docker.internal=host-gateway
+    environment:
+      MFE_ALLOWED_ORIGIN: http://localhost:8080
+    ports:
+      - '127.0.0.1:8080:80'
+
+  products:
+    image: microfrontends-lab-products:local
+    container_name: microfrontends-lab-products
+    build:
+      context: .
+      dockerfile: apps/products-react/Dockerfile
+      args:
+        MFE_REGISTRY_URL: http://host.docker.internal:4873/
+        PRODUCTS_ASSET_PREFIX: http://localhost:8081/
+      extra_hosts:
+        - host.docker.internal=host-gateway
+    environment:
+      MFE_ALLOWED_ORIGIN: http://localhost:8080
+    ports:
+      - '127.0.0.1:8081:80'
+
+  account:
+    image: microfrontends-lab-account:local
+    container_name: microfrontends-lab-account
+    build:
+      context: .
+      dockerfile: apps/account-vue/Dockerfile
+      args:
+        MFE_REGISTRY_URL: http://host.docker.internal:4873/
+        ACCOUNT_ASSET_PREFIX: http://localhost:8082/
+      extra_hosts:
+        - host.docker.internal=host-gateway
+    environment:
+      MFE_ALLOWED_ORIGIN: http://localhost:8080
+    ports:
+      - '127.0.0.1:8082:80'

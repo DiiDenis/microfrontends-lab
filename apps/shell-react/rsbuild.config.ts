@@ -13,6 +13,7 @@ const accountRemoteUrl =
   process.env.ACCOUNT_REMOTE_URL ??
   environment.ACCOUNT_REMOTE_URL ??
   localAccountRemoteUrl;
+const consumeRemoteTypes = process.env.MF_CONSUME_REMOTE_TYPES !== 'false';
 
 export default defineConfig({
   plugins: [
@@ -42,12 +43,14 @@ export default defineConfig({
           requiredVersion: '19.2.8',
         },
       },
-      dts: {
-        consumeTypes: {
-          abortOnError: true,
-          typesOnBuild: true,
-        },
-      },
+      dts: consumeRemoteTypes
+        ? {
+            consumeTypes: {
+              abortOnError: true,
+              typesOnBuild: true,
+            },
+          }
+        : false,
     }),
   ],
   server: {

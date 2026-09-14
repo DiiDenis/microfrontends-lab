@@ -1,7 +1,7 @@
 import { UI_REACT_VERSION } from '@mfe-lab/ui-react';
 import { useState, version as reactVersion } from 'react';
 
-export const PRODUCTS_REMOTE_VERSION = 'products-v3';
+export const PRODUCTS_REMOTE_VERSION = 'products-v4';
 
 export const PRODUCTS_TECHNICAL_INFO = {
   framework: 'React',
