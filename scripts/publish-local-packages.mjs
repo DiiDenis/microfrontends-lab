@@ -6,6 +6,7 @@ const registryUrl = 'http://127.0.0.1:4873/';
 const packageDirectories = [
   'packages/contracts',
   'packages/design-tokens',
+  'infra/verdaccio/seed/ui-react-1.0.0',
   'packages/ui-react',
   'packages/ui-web',
 ];

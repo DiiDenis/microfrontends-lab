@@ -24,3 +24,4 @@
 | 20 | Demonstrar e corrigir isolamento de CSS | Concluída |
 | 21 | Adicionar testes de integração | Concluída |
 | 22 | Empacotar os apps em containers independentes | Concluída |
+| 23 | Criar CI e tornar ownership explícito | Concluída |

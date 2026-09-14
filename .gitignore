@@ -1,5 +1,7 @@
 node_modules/
 dist/
+!infra/verdaccio/seed/ui-react-1.0.0/dist/
+!infra/verdaccio/seed/ui-react-1.0.0/dist/**
 @mf-types/
 .mf/
 coverage/

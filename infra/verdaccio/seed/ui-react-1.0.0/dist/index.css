@@ -1,0 +1,39 @@
+:root {
+  --mfe-color-surface: #fff;
+  --mfe-color-surface-muted: #f8fafc;
+  --mfe-color-text: #0f172a;
+  --mfe-color-border: #cbd5e1;
+  --mfe-color-accent: #2563eb;
+  --mfe-space-1: 0.25rem;
+  --mfe-space-2: 0.5rem;
+  --mfe-space-3: 1rem;
+  --mfe-space-4: 1.5rem;
+  --mfe-radius-small: 0.25rem;
+  --mfe-radius-medium: 0.5rem;
+  --mfe-font-family: system-ui, sans-serif;
+}
+
+.mfe-lab-ui-button {
+  background: var(--mfe-color-accent);
+  border: 0;
+  border-radius: var(--mfe-radius-small);
+  color: var(--mfe-color-surface);
+  cursor: pointer;
+  font: inherit;
+  padding: var(--mfe-space-2) var(--mfe-space-3);
+}
+
+.mfe-lab-ui-button:focus-visible {
+  outline: 2px solid var(--mfe-color-text);
+  outline-offset: 2px;
+}
+
+.mfe-lab-ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mfe-lab-ui-boundary-label {
+  color: var(--mfe-color-accent);
+  font-weight: 700;
+}

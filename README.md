@@ -2,9 +2,62 @@
 
 Este repositório é um laboratório didático para compreender composição, isolamento, comunicação e entrega independente de micro frontends.
 
+## Sobre este projeto
+
+Este projeto público foi desenvolvido por [Denis](https://github.com/DiiDenis) em colaboração com inteligência artificial, usada como parceira de ensino, implementação e revisão. O trabalho foi dividido em etapas pequenas: cada conceito foi estudado, implementado, validado e documentado antes do próximo avanço.
+
+A IA auxiliou na explicação e na construção, mas o objetivo do repositório não é apresentar código gerado sem contexto. As decisões, experimentos, perguntas de revisão e lições registram uma trilha prática para consolidar entendimento intermediário de micro frontends e Module Federation.
+
+O repositório permanece público para que outras pessoas possam executar os mesmos experimentos, consultar as decisões e aprender progressivamente com uma aplicação React que consome remotes React e Vue.
+
+## Trilha progressiva de aprendizado
+
+| Etapa | Tema estudado |
+| --- | --- |
+| 01 | Estrutura do monorepo, workspace e contrato de trabalho |
+| 02 | Shell React standalone com Rsbuild e React Router |
+| 03 | Aplicação Products React independente e estado local |
+| 04 | Aplicação Account Vue independente e lifecycle inicial |
+| 05 | Execução simultânea de três SPAs ainda não compostas |
+| 06 | Products como producer de Module Federation |
+| 07 | Shell consumindo um remote React em runtime |
+| 08 | Deploy independente, manifest, chunks e hashes |
+| 09 | Remote Vue expondo contrato neutro de `mount` e `unmount` |
+| 10 | Host React montando e desmontando o remote Vue |
+| 11 | Contratos TypeScript compartilhados em build time |
+| 12 | Comunicação desacoplada com Custom Events do navegador |
+| 13 | Design tokens compartilhados entre aplicações |
+| 14 | Biblioteca de componentes específica para React |
+| 15 | Web Component reutilizável por React e Vue |
+| 16 | Publicação de pacotes internos em Verdaccio |
+| 17 | Diferença entre atualização federada e atualização de pacote npm |
+| 18 | Diagnóstico de dependências compartilhadas e singletons |
+| 19 | Loading, retry, Error Boundary e resiliência dos remotes |
+| 20 | Ownership e isolamento de CSS entre micro frontends |
+| 21 | Testes unitários e E2E da composição com Playwright |
+| 22 | Containers independentes, Nginx e simulação de produção local |
+| 23 | Integração contínua, artifacts, registry efêmero e ownership |
+
+Cada etapa possui uma lição em `docs/lessons`, e os fluxos mais importantes possuem diagramas em `docs/diagrams`. O laboratório não realiza deploy público nem publica pacotes no npm público.
+
 ## Estrutura
 
-A estrutura será preenchida gradualmente nas próximas etapas.
+```text
+apps/          aplicações independentes e remotes
+packages/      contratos, tokens e bibliotecas compartilhadas
+docs/          lições, decisões, diagramas e experimentos
+infra/         Verdaccio e configurações de Nginx
+scripts/       automações locais e verificações
+.github/       integração contínua
+```
+
+## Pré-requisitos
+
+- Node.js `24.18.0`;
+- pnpm `11.21.0`;
+- Docker Desktop em execução para Verdaccio e experimentos com containers.
+
+Para estudar na ordem planejada, comece por `docs/lessons/01-esqueleto-contrato-trabalho.md` e avance numericamente. Para preparar um clone limpo, execute `pnpm run bootstrap:local` antes dos comandos gerais.
 
 ## Aplicações
 
@@ -141,3 +194,31 @@ O Verdaccio é necessário durante a instalação dos pacotes `@mfe-lab` no est�
 | `MFE_ALLOWED_ORIGIN` | runtime do Nginx | origem autorizada pelo CORS dos containers |
 
 `host.docker.internal` aparece somente na comunicação do build com o Verdaccio executado no host. As URLs que o JavaScript entrega ao navegador usam `localhost`, pois o navegador não participa da rede interna do Compose e não consegue resolver nomes como `products:80`.
+
+## Integração contínua
+
+O workflow `.github/workflows/ci.yml` é executado em `push`, `pull_request` ou manualmente pela aba Actions. Ele apenas valida o laboratório; não publica pacotes ou imagens fora do Verdaccio efêmero de cada job e não realiza deploy.
+
+```text
+Packages and local registry
+            ↓
+      ┌─────┴─────┐
+   Products     Account
+      └─────┬─────┘
+          Shell
+            ↓
+     Integrated E2E
+```
+
+Os jobs aparecem com nomes separados para que uma falha de Products ou Account seja identificada diretamente. Cada job recebe um runner limpo e executa `bootstrap:local`; o cache guarda somente downloads do store do pnpm, nunca o storage mutável do Verdaccio.
+
+O Shell consome o arquivo de tipos produzido no job Products como um artifact da própria execução. Isso preserva o contrato gerado pelo producer sem exigir que o servidor Products esteja no ar durante o build isolado do Shell.
+
+Para validar localmente a origem dos pacotes instalados:
+
+```powershell
+pnpm run bootstrap:local
+pnpm run packages:verify:registry
+```
+
+O seed em `infra/verdaccio/seed/ui-react-1.0.0` representa a versão histórica que o Shell ainda consome. Um registry de empresa preservaria essa versão; o seed permite reconstruir o mesmo estado quando o Verdaccio efêmero começa vazio.

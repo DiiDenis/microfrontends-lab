@@ -1,0 +1,212 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+
+jobs:
+  packages:
+    name: Packages and local registry
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.21.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Bootstrap workspace with ephemeral Verdaccio
+        run: pnpm run bootstrap:local
+
+      - name: Verify packages came from Verdaccio
+        run: pnpm run packages:verify:registry
+
+      - name: Typecheck packages
+        run: |
+          pnpm run typecheck:contracts
+          pnpm run typecheck:design-tokens
+          pnpm run typecheck:ui-react
+          pnpm run typecheck:ui-web
+
+      - name: Unit contract tests
+        run: pnpm run test:unit
+
+      - name: Stop ephemeral Verdaccio
+        if: always()
+        run: pnpm run registry:down
+
+  remotes:
+    name: ${{ matrix.name }}
+    needs: packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Products
+            script: products
+          - name: Account
+            script: account
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.21.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Bootstrap workspace with ephemeral Verdaccio
+        run: pnpm run bootstrap:local
+
+      - name: Verify packages came from Verdaccio
+        run: pnpm run packages:verify:registry
+
+      - name: Typecheck ${{ matrix.name }}
+        run: pnpm run typecheck:${{ matrix.script }}
+
+      - name: Build ${{ matrix.name }}
+        run: pnpm run build:${{ matrix.script }}
+
+      - name: Upload Products remote types
+        if: matrix.script == 'products'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: products-mf-types
+          path: apps/products-react/dist/@mf-types.zip
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Stop ephemeral Verdaccio
+        if: always()
+        run: pnpm run registry:down
+
+  shell:
+    name: Shell
+    needs:
+      - packages
+      - remotes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.21.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Bootstrap workspace with ephemeral Verdaccio
+        run: pnpm run bootstrap:local
+
+      - name: Verify packages came from Verdaccio
+        run: pnpm run packages:verify:registry
+
+      - name: Download Products remote types
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: products-mf-types
+          path: artifacts/products-types
+
+      - name: Extract Products remote types
+        run: |
+          mkdir -p apps/shell-react/@mf-types/products
+          unzip -q artifacts/products-types/@mf-types.zip -d apps/shell-react/@mf-types/products
+
+      - name: Typecheck Shell
+        run: pnpm run typecheck:shell
+
+      - name: Build Shell
+        env:
+          MF_CONSUME_REMOTE_TYPES: 'false'
+        run: pnpm run build:shell
+
+      - name: Stop ephemeral Verdaccio
+        if: always()
+        run: pnpm run registry:down
+
+  e2e:
+    name: Integrated E2E
+    needs:
+      - packages
+      - remotes
+      - shell
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.21.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Bootstrap workspace with ephemeral Verdaccio
+        run: pnpm run bootstrap:local
+
+      - name: Verify packages came from Verdaccio
+        run: pnpm run packages:verify:registry
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run integrated E2E
+        run: pnpm run test:e2e
+
+      - name: Upload Playwright traces on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-failure-traces
+          path: test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Stop ephemeral Verdaccio
+        if: always()
+        run: pnpm run registry:down

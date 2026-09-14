@@ -1957,3 +1957,779 @@ O navegador recarregou a rota no mesmo Shell, consultou o manifest estável em `
 - não colocou os três apps na mesma imagem.
 
 Isso é suficiente para aprender a fronteira de empacotamento e validar a arquitetura localmente sem custo de hospedagem.
+
+## Etapa 23 — CI como uma equipe de inspetores
+
+### A história humana
+
+Imagine que cada job do GitHub Actions recebe uma mesa completamente vazia:
+
+```text
+Job Packages recebe computador A
+Job Products recebe computador B
+Job Account recebe computador C
+Job Shell recebe computador D
+Job E2E recebe computador E
+```
+
+O fato de Packages terminar primeiro não teletransporta seus arquivos para os outros computadores. `needs` significa “espere e só continue se ele passar”, não “herde o disco dele”.
+
+Por isso cada computador prepara o registry local necessário. Quando um arquivo realmente precisa viajar de um job para outro, usamos um artifact explícito.
+
+### Ilustração para o ebook
+
+```mermaid
+flowchart TD
+  G[Git push] --> P[Inspetor de Packages]
+  P --> PR[Inspetor de Products]
+  P --> A[Inspetor de Account]
+  PR -- caixa com tipos --> S[Inspetor do Shell]
+  A --> S
+  S --> E[Inspetor E2E]
+  PR --> E
+  A --> E
+  E --> R{Sistema integrado funciona?}
+```
+
+Na versão ilustrada, cada inspetor deve aparecer numa bancada separada. A “caixa com tipos” representa o artifact de Products. Manter páginas ilustradas e fundos coloridos full bleed.
+
+### Workflow, job e step
+
+```text
+workflow = o plano completo da inspeção
+job      = um inspetor numa máquina isolada
+step     = uma tarefa na lista daquele inspetor
+```
+
+Um exemplo reduzido:
+
+```yaml
+jobs:
+  products:
+    name: Products
+    steps:
+      - run: pnpm run typecheck:products
+      - run: pnpm run build:products
+```
+
+Quando esse job falha, a interface mostra “Products” em vermelho. Isso é ownership operacional: não é preciso vasculhar um log gigantesco para descobrir qual domínio quebrou primeiro.
+
+### O que `needs` realmente faz
+
+```yaml
+shell:
+  needs:
+    - products
+    - account
+```
+
+Significa:
+
+```text
+Products passou? ─┐
+                  ├─ então o Shell pode começar
+Account passou? ──┘
+```
+
+Não significa:
+
+```text
+Shell recebe automaticamente dist e node_modules dos dois  ← falso
+```
+
+### Por que os tipos viajam como artifact
+
+Products produz:
+
+```text
+apps/products-react/dist/@mf-types.zip
+```
+
+O GitHub guarda esse arquivo por um tempo curto e o job Shell baixa a mesma caixa:
+
+```text
+Products job
+   ↓ upload artifact
+GitHub Actions
+   ↓ download artifact
+Shell job
+   ↓
+apps/shell-react/@mf-types/products
+```
+
+Artifact é resultado de uma execução. Cache é uma otimização que pode desaparecer. O contrato de tipos necessário ao Shell é artifact; downloads de dependências que podem ser refeitos ficam no cache.
+
+### O Verdaccio efêmero
+
+“Efêmero” significa que nasce para um job e desaparece com aquela máquina:
+
+```text
+job inicia
+  → Verdaccio vazio nasce
+  → pacotes são publicados localmente
+  → app instala e valida
+job termina
+  → Verdaccio desaparece
+```
+
+Ele não é npm público e não recebe token. É apenas o registry de teste daquele runner.
+
+### Por que precisamos guardar ui-react 1.0.0
+
+No mundo real, publicar `1.1.0` não apaga `1.0.0` do registry. Nosso experimento depende disso:
+
+```text
+Shell    → ui-react 1.0.0
+Products → ui-react 1.1.0
+```
+
+Um registry temporário começa sem história. O seed é uma fotografia imutável do pacote antigo, não uma segunda fonte ativa:
+
+```text
+infra/verdaccio/seed/ui-react-1.0.0 → fotografia histórica
+packages/ui-react                   → código atual 1.1.0
+```
+
+Frase de entrevista:
+
+> Um registry efêmero precisa ser semeado com todas as versões históricas exigidas pelo lockfile; caso contrário, a CI limpa não reproduz o estado que um registry persistente fornece em produção.
+
+### Como provar que não virou link local
+
+Declarar `"@mfe-lab/ui-react": "1.0.0"` não basta para uma boa prova. O script verifica o caminho real:
+
+```text
+correto:
+node_modules/.pnpm/@mfe-lab+ui-react@1.0.0/...
+
+incorreto para este experimento:
+packages/ui-react/...
+```
+
+Isso evita que o monorepo esconda uma publicação ausente conectando silenciosamente o app ao código-fonte atual.
+
+### Por que não filtrar paths ainda
+
+Parece tentador executar Products somente quando `apps/products-react/**` mudar. Mas:
+
+```text
+packages/contracts mudou
+├── Shell pode quebrar
+├── Products pode quebrar
+└── Account pode quebrar
+```
+
+Sem um grafo de impacto confiável, pular jobs gera um “verde mentiroso”. Neste laboratório pequeno, é melhor executar toda a validação.
+
+### CI não é deploy
+
+```text
+CI atual
+├── instala
+├── compila
+├── testa
+└── informa falhas
+
+Não faz
+├── npm publish público
+├── docker push
+├── Hostinger
+└── produção
+```
+
+Deploy independente e CI integrada convivem bem: cada domínio pode ser entregue sozinho, mas todos continuam validando os contratos que formam a experiência do usuário.
+
+## Tutorial de leitura do `ci.yml`
+
+O nome correto é `ci.yml`: **CI** significa *Continuous Integration*, ou integração contínua. O arquivo fica em:
+
+```text
+.github/workflows/ci.yml
+```
+
+O GitHub reconhece automaticamente arquivos YAML nessa pasta. YAML representa hierarquia pela indentação; portanto, os espaços à esquerda fazem parte da configuração.
+
+Uma forma humana de enxergar o arquivo é:
+
+```text
+workflow CI
+├── quando executar
+├── permissões e variáveis globais
+└── jobs
+    ├── packages
+    ├── remotes
+    │   ├── Products
+    │   └── Account
+    ├── shell
+    └── e2e
+```
+
+Dentro de cada job existem `steps`, executados de cima para baixo. Jobs sem dependência entre si podem executar em paralelo.
+
+### Desenho completo da CI com os comandos
+
+```mermaid
+flowchart TD
+  Trigger["Você faz git push<br/>ou abre um PR<br/>ou clica em Run workflow"] --> Packages
+
+  Packages["JOB PACKAGES<br/>checkout<br/>instala pnpm e Node<br/>bootstrap:local<br/>packages:verify:registry<br/>typecheck dos packages<br/>test:unit"]
+
+  Packages --> Products["JOB PRODUCTS<br/>checkout + ferramentas<br/>bootstrap:local<br/>packages:verify:registry<br/>typecheck:products<br/>build:products"]
+  Packages --> Account["JOB ACCOUNT<br/>checkout + ferramentas<br/>bootstrap:local<br/>packages:verify:registry<br/>typecheck:account<br/>build:account"]
+
+  Products --> Types["Artifact<br/>products-mf-types<br/>@mf-types.zip"]
+  Types --> Shell
+  Products --> Shell
+  Account --> Shell
+
+  Shell["JOB SHELL<br/>checkout + ferramentas<br/>bootstrap:local<br/>packages:verify:registry<br/>baixa e extrai tipos<br/>typecheck:shell<br/>build:shell"]
+
+  Shell --> E2E["JOB INTEGRATED E2E<br/>checkout + ferramentas<br/>bootstrap:local<br/>packages:verify:registry<br/>instala Chromium<br/>test:e2e"]
+
+  E2E --> Result["Resultado no GitHub<br/>verde: aprovado<br/>vermelho: abrir primeiro step que falhou"]
+```
+
+Leia as setas como “só pode começar depois”. A caixa `Artifact` é diferente: ela representa um arquivo realmente transportado entre máquinas.
+
+O detalhe interno repetido dentro de cada job é:
+
+```mermaid
+flowchart LR
+  Checkout["checkout<br/>baixa o repositório"] --> Pnpm["pnpm setup<br/>instala pnpm 11.21.0"]
+  Pnpm --> Node["setup-node<br/>Node 24.18.0<br/>cache do pnpm"]
+  Node --> Registry["registry:up<br/>sobe Verdaccio"]
+  Registry --> InstallPackages["packages:install<br/>dependências para buildar packages"]
+  InstallPackages --> BuildPackages["packages:build<br/>gera dist dos packages"]
+  BuildPackages --> PackCheck["packages:pack:check<br/>inspeciona o que seria publicado"]
+  PackCheck --> Publish["packages:publish:local<br/>publica no Verdaccio"]
+  Publish --> WorkspaceInstall["workspace:install:local-registry<br/>instala workspace pelo lockfile"]
+  WorkspaceInstall --> Specific["comandos específicos<br/>do job"]
+  Specific --> Cleanup["registry:down<br/>cleanup com always()"]
+```
+
+Em resumo, cada job prepara sua própria cozinha antes de executar sua receita específica. Ele não reutiliza a cozinha do job anterior.
+
+### Cabeçalho: nome e gatilhos
+
+```yaml
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+```
+
+- `name` é o nome mostrado na aba **Actions** do GitHub.
+- `push` executa quando commits são enviados ao repositório.
+- `pull_request` executa quando um PR é criado ou atualizado.
+- `workflow_dispatch` cria o botão **Run workflow** para uma execução manual.
+
+Exemplo: depois de `git push`, não é necessário entrar em um servidor e digitar `pnpm run check`. O GitHub cria uma máquina temporária e segue este arquivo.
+
+### Permissão mínima e ambiente de CI
+
+```yaml
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+```
+
+`contents: read` permite apenas ler o repositório. O workflow não recebeu permissão para criar commits, releases ou publicar código.
+
+`CI=true` avisa às ferramentas que elas estão em automação. Isso costuma desativar interfaces interativas e fazer erros encerrarem o processo com mais clareza.
+
+### Anatomia de um job
+
+O primeiro job começa assim:
+
+```yaml
+packages:
+  name: Packages and local registry
+  runs-on: ubuntu-latest
+  timeout-minutes: 20
+  steps:
+```
+
+- `packages` é o identificador técnico usado por `needs`.
+- `name` é o texto legível exibido no GitHub.
+- `runs-on` pede uma máquina Linux temporária.
+- `timeout-minutes` impede uma execução travada para sempre.
+- `steps` contém as ações e comandos desse job.
+
+A máquina começa praticamente vazia. Ela não possui o checkout, `node_modules`, builds nem o Verdaccio de outro job.
+
+### Os três passos comuns de preparação
+
+```yaml
+- name: Checkout
+  uses: actions/checkout@<sha>
+```
+
+`uses` executa uma Action reutilizável. O checkout baixa o repositório para a máquina temporária. Sem isso, os próximos comandos não encontrariam `package.json` nem o código.
+
+```yaml
+- name: Install pnpm
+  uses: pnpm/action-setup@<sha>
+  with:
+    version: 11.21.0
+    run_install: false
+```
+
+Esse passo instala o executável pnpm na versão fixada. `run_install: false` significa: “prepare o pnpm, mas ainda não rode `pnpm install`”. A instalação controlada das dependências acontecerá dentro do nosso bootstrap.
+
+```yaml
+- name: Install Node.js
+  uses: actions/setup-node@<sha>
+  with:
+    node-version: 24.18.0
+    cache: pnpm
+    cache-dependency-path: pnpm-lock.yaml
+```
+
+Aqui o runner recebe a versão exata do Node. O cache do pnpm reaproveita downloads compatíveis com o `pnpm-lock.yaml`.
+
+Esse cache **não** é:
+
+- um `node_modules` compartilhado entre jobs;
+- o banco do Verdaccio;
+- uma garantia de que o pacote foi instalado do lugar correto.
+
+Ele apenas evita baixar novamente bytes que podem ser reconstruídos e validados.
+
+As Actions estão presas por SHA, por exemplo `actions/checkout@3d3c...`. O comentário informa a versão humana. Fixar o SHA evita que uma tag remota mude de conteúdo silenciosamente.
+
+### De onde vêm os valores de `uses`
+
+`uses` não aponta para um arquivo deste laboratório. Ele referencia uma Action reutilizável hospedada no GitHub:
+
+```text
+actions/checkout@3d3c42...
+└─────┬────────┘ └───┬───┘
+      │              └─ commit exato executado
+      └─ owner/repositório da Action
+```
+
+As referências usadas foram obtidas nos repositórios e exemplos oficiais:
+
+- `actions/checkout`: coloca o repositório em `$GITHUB_WORKSPACE`;
+- `pnpm/action-setup`: instala o executável pnpm;
+- `actions/setup-node`: instala Node e configura o cache do pnpm;
+- `actions/upload-artifact`: envia um arquivo produzido pelo job;
+- `actions/download-artifact`: baixa o artifact em outro job.
+
+É comum a documentação mostrar uma tag curta, como `actions/checkout@v7`. Para o workflow definitivo, resolvemos essa versão para seu commit completo e mantemos `# v7.0.1` como comentário legível. O GitHub recomenda o SHA completo porque ele é uma referência imutável.
+
+O workflow não foi copiado inteiro de um exemplo pronto. A sintaxe e os passos básicos vieram dessas documentações; a ordem Packages → Remotes → Shell → E2E, o Verdaccio efêmero, a verificação contra links de workspace e a transferência dos tipos federados foram compostos especificamente para a arquitetura deste laboratório.
+
+### O bootstrap executado em cada máquina
+
+```yaml
+- name: Bootstrap workspace with ephemeral Verdaccio
+  run: pnpm run bootstrap:local
+```
+
+Em linguagem humana, esse script faz:
+
+```text
+subir Verdaccio vazio
+  → instalar as dependências necessárias aos packages
+  → construir os pacotes compartilhados
+  → inspecionar o conteúdo que entrará nos tarballs
+  → publicar as versões no Verdaccio
+  → instalar o workspace pelo lockfile
+  → deixar apps prontos para typecheck/build/test
+```
+
+Não criamos usuário porque o `config.yaml` permite publicação anônima somente no escopo privado deste laboratório, `@mfe-lab/*`. O Verdaccio existe apenas localmente no runner e é destruído no fim do job.
+
+O comando grande do `package.json` é apenas a sequência explícita:
+
+```text
+registry:up
+&& packages:install
+&& packages:build
+&& packages:pack:check
+&& packages:publish:local
+&& workspace:install:local-registry
+```
+
+`&&` significa “execute o próximo somente se o anterior terminar com sucesso”. Não existe um arquivo mágico gerando essa ordem; ela foi escrita por uma pessoa de acordo com a dependência real entre as operações. Não podemos instalar os apps antes de o registry conter os pacotes que o lockfile exige.
+
+Ele é repetido em cada job porque cada job tem uma máquina isolada. O Verdaccio iniciado no job `packages` não pode ser acessado pelos jobs `remotes`, `shell` ou `e2e`.
+
+### Job `packages`
+
+O job valida os pacotes compartilhados antes dos consumidores:
+
+```text
+contracts
+design-tokens
+ui-react
+ui-web
+```
+
+Depois do bootstrap, ele executa:
+
+```yaml
+pnpm run packages:verify:registry
+```
+
+Isso prova que os apps instalaram os pacotes publicados, em vez de usarem atalhos para `packages/`.
+
+Em seguida, roda o typecheck dos quatro pacotes e os testes unitários dos contratos. Se um deles falhar, os jobs que declaram `needs: packages` não começam.
+
+### Job `remotes` e a matrix
+
+Uma matrix evita duplicar quase o mesmo job para Products e Account:
+
+```yaml
+strategy:
+  fail-fast: false
+  matrix:
+    include:
+      - name: Products
+        script: products
+      - name: Account
+        script: account
+```
+
+O GitHub expande isso mentalmente para:
+
+```text
+job Products → typecheck:products → build:products
+job Account  → typecheck:account  → build:account
+```
+
+`${{ matrix.name }}` e `${{ matrix.script }}` são expressões avaliadas pelo GitHub, não pelo pnpm. `fail-fast: false` permite que Account continue sendo diagnosticado mesmo se Products falhar; assim vemos todos os problemas de uma vez.
+
+```yaml
+needs: packages
+```
+
+Isso quer dizer “só comece depois que Packages passar”. Não quer dizer “receba os arquivos criados por Packages”. Para transportar um arquivo entre jobs é necessário usar um artifact.
+
+### Por que Products envia um artifact de tipos
+
+Somente a execução da matrix cujo `script` é `products` entra neste passo:
+
+```yaml
+if: matrix.script == 'products'
+```
+
+Ela envia `apps/products-react/dist/@mf-types.zip` ao armazenamento temporário do GitHub. O arquivo contém o contrato TypeScript gerado pelo remote Products.
+
+```text
+Products constrói tipos
+  → upload-artifact guarda o ZIP
+  → Shell baixa o ZIP
+  → TypeScript do Shell verifica o uso do remote
+```
+
+Esse artifact fica apenas um dia porque serve a esta validação, não é um release do produto.
+
+### Job `shell`
+
+```yaml
+needs:
+  - packages
+  - remotes
+```
+
+O Shell só começa quando os pacotes e os dois remotes foram aprovados. Depois de preparar sua própria máquina, ele baixa e descompacta os tipos de Products em:
+
+```text
+apps/shell-react/@mf-types/products
+```
+
+O typecheck consegue então compreender `products/ProductApp` sem copiar o componente e sem executar o remote.
+
+Durante o build existe:
+
+```yaml
+env:
+  MF_CONSUME_REMOTE_TYPES: 'false'
+```
+
+Isso desliga apenas uma nova tentativa automática de buscar os tipos pela rede. Os tipos já foram transferidos explicitamente pelo artifact, e o servidor Products não está rodando dentro da máquina do job Shell. Isso não remove o remote de runtime nem coloca Products dentro do bundle do Shell.
+
+### Job `e2e`
+
+O teste integrado depende de tudo:
+
+```text
+Packages + Products + Account + Shell aprovados
+                     ↓
+                    E2E
+```
+
+Ele instala o Chromium usado pelo Playwright e roda `pnpm run test:e2e`. A configuração do Playwright inicia os três servidores, abre o Shell como um usuário e valida a composição real no navegador.
+
+Se houver falha, os traces são enviados como artifact por causa de:
+
+```yaml
+if: failure()
+```
+
+Esses arquivos ajudam a investigar página, ações, rede e erro. Se tudo passar, não há motivo para armazená-los.
+
+### Por que o cleanup usa `always()`
+
+```yaml
+- name: Stop ephemeral Verdaccio
+  if: always()
+  run: pnpm run registry:down
+```
+
+Sem `always()`, uma falha anterior poderia pular o cleanup. Com ele, o GitHub tenta parar o Verdaccio tanto no sucesso quanto no erro. É o equivalente a um `finally` de JavaScript.
+
+## Tutorial do `verify-registry-packages.mjs`
+
+O nome significa “verificar os pacotes do registry”. Seu objetivo não é testar a interface: é provar a origem e a versão das bibliotecas `@mfe-lab/*` instaladas nos apps.
+
+O algoritmo pode ser lido visualmente assim:
+
+```mermaid
+flowchart TD
+  Start["Inicia verify-registry-packages.mjs"] --> Ping["GET /-/ping no Verdaccio"]
+  Ping -->|não respondeu| Fail["assert falha<br/>job fica vermelho"]
+  Ping -->|respondeu| Item["Pega uma expectativa<br/>app + pacote + versão"]
+  Item --> Manifest["Localiza package.json<br/>dentro do node_modules do app"]
+  Manifest --> Realpath["realpath segue o link<br/>e revela o destino verdadeiro"]
+  Realpath --> Version{"Versão instalada<br/>é a esperada?"}
+  Version -->|não| Fail
+  Version -->|sim| Source{"Destino está fora de packages/<br/>e dentro de node_modules/.pnpm?"}
+  Source -->|não| Fail
+  Source -->|sim| Metadata["Consulta metadados<br/>do pacote no Verdaccio"]
+  Metadata --> Published{"A versão existe<br/>no registry?"}
+  Published -->|não| Fail
+  Published -->|sim| More{"Existem outras<br/>expectativas?"}
+  More -->|sim| Item
+  More -->|não| Success["Todos validados<br/>step fica verde"]
+```
+
+O ponto central do desenho é `realpath`: olhar apenas o endereço aparente em `apps/.../node_modules` não revelaria se o pnpm criou um link direto para `packages/`.
+
+### 1. Ferramentas usadas
+
+```js
+import assert from 'node:assert/strict';
+import { readFile, realpath } from 'node:fs/promises';
+import path from 'node:path';
+```
+
+São módulos nativos do Node; nenhuma biblioteca nova foi instalada.
+
+- `assert` interrompe o script quando uma condição esperada não é verdadeira.
+- `readFile` lê o `package.json` instalado.
+- `realpath` segue links simbólicos e descobre onde o arquivo realmente está.
+- `path` monta e compara caminhos sem depender de barra do Windows ou Linux.
+
+### 2. Tabela de expectativas
+
+```js
+['shell-react', 'ui-react', '1.0.0']
+['products-react', 'ui-react', '1.1.0']
+```
+
+Cada linha significa:
+
+```text
+app → nome do pacote → versão que deveria estar instalada
+```
+
+Ela documenta inclusive o experimento em que Shell e Products usam versões diferentes de `ui-react`.
+
+### 3. Confirmar que o Verdaccio está vivo
+
+```js
+const registryPing = await fetch(new URL('-/ping', registryUrl));
+assert.equal(registryPing.ok, true, 'O Verdaccio não respondeu ao ping');
+```
+
+Antes de procurar pacotes, o script chama o endpoint de saúde. Se o servidor estiver desligado, falha com uma mensagem identificável.
+
+### 4. Encontrar a instalação real
+
+Para cada expectativa, o script procura algo como:
+
+```text
+apps/shell-react/node_modules/@mfe-lab/ui-react/package.json
+```
+
+Esse caminho pode ser um link criado pelo pnpm. Por isso `realpath()` é a linha decisiva: ela revela o destino real.
+
+Resultados possíveis:
+
+```text
+packages/ui-react/...                         → link para fonte do monorepo
+node_modules/.pnpm/@mfe-lab+ui-react@1.0.0/... → pacote instalado
+```
+
+Para este experimento, queremos a segunda situação.
+
+### 5. Verificar versão e rejeitar o atalho de workspace
+
+O script lê a propriedade `version` do manifesto e compara com a versão esperada. Depois faz duas provas de origem:
+
+- o caminho real não pode ficar dentro de `packages/`;
+- o caminho deve ter o formato do store virtual `.pnpm/@mfe-lab+...`.
+
+Isso detecta o problema: “o build ficou verde porque o pnpm conectou diretamente o código-fonte local, embora a publicação estivesse ausente”.
+
+### 6. Confirmar a versão no próprio Verdaccio
+
+O nome com escopo, como `@mfe-lab/ui-react`, é codificado para formar uma URL segura. O script consulta os metadados do pacote e verifica:
+
+```js
+Object.hasOwn(metadata.versions ?? {}, expectedVersion)
+```
+
+Em português: “dentro das versões conhecidas pelo Verdaccio existe exatamente a versão esperada?”
+
+Assim fazemos duas verificações complementares:
+
+```text
+disco local: o app instalou a versão correta pelo store do pnpm
+Verdaccio:   essa versão realmente foi publicada no registry temporário
+```
+
+Precisão importante: o pnpm pode reaproveitar os bytes do seu cache em vez de baixá-los novamente pela rede. A prova relevante não é “houve download HTTP agora”, mas “a dependência foi resolvida como pacote versionado, com integridade do lockfile, e não como link para o fonte do workspace”.
+
+Se qualquer `assert` falhar, o processo devolve código de erro e o step da CI fica vermelho.
+
+### Como o publicador complementa o verificador
+
+`publish-local-packages.mjs` e `verify-registry-packages.mjs` têm funções diferentes:
+
+```text
+publish-local-packages → coloca os artifacts no Verdaccio
+verify-registry-packages → prova que eles existem e foram realmente instalados
+```
+
+No publicador, `packageDirectories` define manualmente a ordem das versões que precisam existir:
+
+```text
+contracts 1.0.0
+design-tokens 1.0.0
+ui-react 1.0.0 histórico
+ui-react 1.1.0 atual
+ui-web 1.0.0
+```
+
+Essa lista foi criada por nós; não é gerada automaticamente. Quando surgir outro pacote publicado ou uma versão histórica necessária, alguém deverá revisá-la.
+
+Antes de publicar, `isPublished()` consulta os metadados do Verdaccio. Se a mesma versão já existir, o script pula. Isso é importante porque registries normalmente não permitem sobrescrever uma versão publicada.
+
+Quando precisa publicar, `spawnSync()` executa o equivalente a:
+
+```bash
+pnpm --dir DIRETORIO publish \
+  --registry http://127.0.0.1:4873/ \
+  --access restricted \
+  --no-git-checks
+```
+
+- `--dir` diz de qual pasta o pacote será empacotado.
+- `--registry` aponta explicitamente para o Verdaccio, evitando o npm público.
+- `--access restricted` mantém o pacote com escopo privado.
+- `--no-git-checks` é adequado ao registry temporário da CI, onde não estamos fazendo uma publicação oficial baseada no estado da branch.
+
+O trecho diferente para Windows existe porque, nesse sistema, o executável do pnpm normalmente é resolvido por `cmd.exe`. No runner Linux, o script chama `pnpm` diretamente. Isso é compatibilidade entre sistemas, não uma regra de Module Federation.
+
+### O que esse script prova — e o que não prova
+
+Ele prova:
+
+- Verdaccio acessível;
+- versões esperadas publicadas;
+- versões corretas instaladas;
+- ausência de link direto para o código-fonte de `packages/`.
+
+Ele não prova:
+
+- que toda API da biblioteca funciona;
+- que a UI está visualmente correta;
+- que o Module Federation carregará os remotes;
+- que produção está publicada.
+
+Essas responsabilidades pertencem aos testes unitários, builds, E2E e futuro processo de deploy.
+
+## O que é automático e o que continua manual
+
+### Configuração feita uma vez por uma pessoa
+
+Alguém precisa criar e manter conscientemente:
+
+- `.github/workflows/ci.yml`;
+- scripts do `package.json` usados pelo workflow;
+- `verify-registry-packages.mjs` e sua tabela de versões;
+- ordem de publicação das bibliotecas;
+- seed imutável de versões históricas ainda consumidas;
+- testes e critérios que realmente representam qualidade.
+
+A CI não descobre sozinha a arquitetura correta. Ela apenas executa de forma repetível as regras que a equipe escreveu.
+
+### Passos manuais para ativar no GitHub
+
+Depois de criar o repositório remoto:
+
+```bash
+git remote add origin URL_DO_REPOSITORIO
+git push -u origin main
+```
+
+O arquivo dentro de `.github/workflows/` passa a ser reconhecido. Na aba **Actions**, será possível abrir `CI`, acompanhar os jobs e também usar **Run workflow**.
+
+Este workflow não exige secrets porque não publica no npm, não envia imagens Docker e não faz deploy.
+
+### O que acontece automaticamente a cada push ou PR
+
+```text
+checkout
+→ prepara Node e pnpm
+→ sobe registry efêmero
+→ publica e instala pacotes
+→ verifica a origem
+→ typecheck e builds
+→ testes unitários
+→ testes E2E
+→ cleanup
+```
+
+### Manutenção humana normal
+
+A equipe ainda precisa:
+
+- abrir o job vermelho e ler o primeiro step que falhou;
+- atualizar versões e lockfile de forma intencional;
+- atualizar a matrix quando surgir um novo app que deva ter job próprio;
+- atualizar a tabela do verificador quando mudar uma dependência esperada;
+- preservar no seed uma versão antiga enquanto algum consumidor ainda depender dela;
+- revisar e atualizar SHAs das Actions com segurança;
+- decidir regras de branch e se a CI será obrigatória para merge;
+- baixar e analisar traces do Playwright quando o E2E falhar.
+
+### Como ler uma falha sem se perder
+
+```text
+Packages vermelho
+→ suspeite de publicação, instalação, tipos ou contratos compartilhados
+
+Products/Account vermelho
+→ suspeite do remote indicado pelo nome do job
+
+Shell vermelho
+→ suspeite do consumer ou do contrato de tipos recebido de Products
+
+E2E vermelho
+→ os builds passaram, mas a integração no navegador falhou
+```
+
+Comece pelo primeiro step vermelho dentro do job. Um job posterior com mensagem “skipped” geralmente não tem defeito próprio: ele foi impedido por um `needs` que falhou.
+
+### Frase curta para entrevista
+
+> O workflow cria ambientes limpos, publica os pacotes internos num Verdaccio efêmero, verifica que os consumidores não estão mascarados por links de workspace, valida pacotes e remotes separadamente, transfere o contrato federado de Products como artifact e, por fim, testa a composição completa no navegador.
