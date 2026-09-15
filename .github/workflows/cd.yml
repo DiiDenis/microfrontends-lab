@@ -1,0 +1,222 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Imagem que deve ser publicada e implantada
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - shell
+          - products
+          - account
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: production-${{ inputs.target || 'all' }}
+  cancel-in-progress: false
+
+env:
+  CI: 'true'
+  SHELL_PUBLIC_URL: https://mfe.diidenis.com.br
+  PRODUCTS_PUBLIC_URL: https://products-mfe.diidenis.com.br
+  ACCOUNT_PUBLIC_URL: https://account-mfe.diidenis.com.br
+
+jobs:
+  publish-and-deploy:
+    name: Publish images and deploy
+    if: >-
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' ||
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout approved commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: 11.21.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Select target and immutable tag
+        id: release
+        shell: bash
+        run: |
+          target="${{ inputs.target }}"
+          if [[ -z "$target" ]]; then
+            target="all"
+          fi
+
+          commit_sha="$(git rev-parse HEAD)"
+          {
+            echo "target=$target"
+            echo "commit_sha=$commit_sha"
+            echo "tag=sha-${commit_sha:0:12}"
+            echo "image_prefix=ghcr.io/${GITHUB_REPOSITORY,,}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Bootstrap workspace with ephemeral Verdaccio
+        run: pnpm run bootstrap:local
+
+      - name: Verify packages came from Verdaccio
+        run: pnpm run packages:verify:registry
+
+      - name: Build Products for production
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'products'
+        env:
+          PRODUCTS_ASSET_PREFIX: ${{ env.PRODUCTS_PUBLIC_URL }}/
+        run: pnpm run build:products
+
+      - name: Build Account for production
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'account'
+        env:
+          ACCOUNT_ASSET_PREFIX: ${{ env.ACCOUNT_PUBLIC_URL }}/
+        run: pnpm run build:account
+
+      - name: Build Shell for production
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'shell'
+        env:
+          PRODUCTS_REMOTE_URL: ${{ env.PRODUCTS_PUBLIC_URL }}/mf-manifest.json
+          ACCOUNT_REMOTE_URL: ${{ env.ACCOUNT_PUBLIC_URL }}/mf-manifest.json
+          MF_CONSUME_REMOTE_TYPES: 'false'
+        run: pnpm run build:shell
+
+      - name: Log in to GitHub Container Registry
+        shell: bash
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - name: Publish Shell image
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'shell'
+        env:
+          IMAGE: ${{ steps.release.outputs.image_prefix }}-shell
+          IMMUTABLE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          docker build \
+            --file infra/nginx/Dockerfile.prebuilt \
+            --build-arg APP_DIST=apps/shell-react/dist \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${{ steps.release.outputs.commit_sha }}" \
+            --tag "$IMAGE:main" \
+            --tag "$IMAGE:$IMMUTABLE_TAG" \
+            .
+          docker push "$IMAGE:main"
+          docker push "$IMAGE:$IMMUTABLE_TAG"
+
+      - name: Publish Products image
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'products'
+        env:
+          IMAGE: ${{ steps.release.outputs.image_prefix }}-products
+          IMMUTABLE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          docker build \
+            --file infra/nginx/Dockerfile.prebuilt \
+            --build-arg APP_DIST=apps/products-react/dist \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${{ steps.release.outputs.commit_sha }}" \
+            --tag "$IMAGE:main" \
+            --tag "$IMAGE:$IMMUTABLE_TAG" \
+            .
+          docker push "$IMAGE:main"
+          docker push "$IMAGE:$IMMUTABLE_TAG"
+
+      - name: Publish Account image
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'account'
+        env:
+          IMAGE: ${{ steps.release.outputs.image_prefix }}-account
+          IMMUTABLE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          docker build \
+            --file infra/nginx/Dockerfile.prebuilt \
+            --build-arg APP_DIST=apps/account-vue/dist \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${{ steps.release.outputs.commit_sha }}" \
+            --tag "$IMAGE:main" \
+            --tag "$IMAGE:$IMMUTABLE_TAG" \
+            .
+          docker push "$IMAGE:main"
+          docker push "$IMAGE:$IMMUTABLE_TAG"
+
+      - name: Deploy Shell through Dokploy
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'shell'
+        env:
+          DOKPLOY_API_URL: ${{ vars.DOKPLOY_API_URL }}
+          DOKPLOY_APPLICATION_ID: ${{ vars.DOKPLOY_SHELL_APPLICATION_ID }}
+          DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
+        run: |
+          if [[ -z "$DOKPLOY_API_URL" || -z "$DOKPLOY_APPLICATION_ID" || -z "$DOKPLOY_API_TOKEN" ]]; then
+            echo "::notice::Dokploy ainda não configurado; a imagem Shell foi publicada sem deploy automático."
+            exit 0
+          fi
+          curl --fail --silent --show-error \
+            --request POST "$DOKPLOY_API_URL/api/application.deploy" \
+            --header 'accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --header "x-api-key: $DOKPLOY_API_TOKEN" \
+            --data "{\"applicationId\":\"$DOKPLOY_APPLICATION_ID\"}"
+
+      - name: Deploy Products through Dokploy
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'products'
+        env:
+          DOKPLOY_API_URL: ${{ vars.DOKPLOY_API_URL }}
+          DOKPLOY_APPLICATION_ID: ${{ vars.DOKPLOY_PRODUCTS_APPLICATION_ID }}
+          DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
+        run: |
+          if [[ -z "$DOKPLOY_API_URL" || -z "$DOKPLOY_APPLICATION_ID" || -z "$DOKPLOY_API_TOKEN" ]]; then
+            echo "::notice::Dokploy ainda não configurado; a imagem Products foi publicada sem deploy automático."
+            exit 0
+          fi
+          curl --fail --silent --show-error \
+            --request POST "$DOKPLOY_API_URL/api/application.deploy" \
+            --header 'accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --header "x-api-key: $DOKPLOY_API_TOKEN" \
+            --data "{\"applicationId\":\"$DOKPLOY_APPLICATION_ID\"}"
+
+      - name: Deploy Account through Dokploy
+        if: steps.release.outputs.target == 'all' || steps.release.outputs.target == 'account'
+        env:
+          DOKPLOY_API_URL: ${{ vars.DOKPLOY_API_URL }}
+          DOKPLOY_APPLICATION_ID: ${{ vars.DOKPLOY_ACCOUNT_APPLICATION_ID }}
+          DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
+        run: |
+          if [[ -z "$DOKPLOY_API_URL" || -z "$DOKPLOY_APPLICATION_ID" || -z "$DOKPLOY_API_TOKEN" ]]; then
+            echo "::notice::Dokploy ainda não configurado; a imagem Account foi publicada sem deploy automático."
+            exit 0
+          fi
+          curl --fail --silent --show-error \
+            --request POST "$DOKPLOY_API_URL/api/application.deploy" \
+            --header 'accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --header "x-api-key: $DOKPLOY_API_TOKEN" \
+            --data "{\"applicationId\":\"$DOKPLOY_APPLICATION_ID\"}"
+
+      - name: Stop ephemeral Verdaccio
+        if: always()
+        run: pnpm run registry:down

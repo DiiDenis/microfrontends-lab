@@ -1,0 +1,14 @@
+**
+!apps/
+!apps/account-vue/
+!apps/account-vue/dist/
+!apps/account-vue/dist/**
+!apps/products-react/
+!apps/products-react/dist/
+!apps/products-react/dist/**
+!apps/shell-react/
+!apps/shell-react/dist/
+!apps/shell-react/dist/**
+!infra/
+!infra/nginx/
+!infra/nginx/default.conf.template
